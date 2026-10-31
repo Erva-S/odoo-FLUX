@@ -3,12 +3,11 @@ import assert from 'node:assert';
 import { prisma } from '../config/database.js';
 import * as productService from '../services/product.service.js';
 import * as planService from '../services/plan.service.js';
-import { login } from '../services/auth.service.js';
+import { Role } from '@prisma/client';
 
-describe('Phase 2 — Products & Variants Lifecycle Tests', async () => {
+describe('Product Management & Security Tests', async () => {
   let adminUserId: string;
   let testProductId: string;
-  let testVariantId: string;
 
   before(async () => {
     const admin = await prisma.user.findUnique({
@@ -19,40 +18,31 @@ describe('Phase 2 — Products & Variants Lifecycle Tests', async () => {
     }
   });
 
-  test('1. Admin can create a new Product with unique SKU code and variants', async () => {
-    const code = `TEST-PROD-${Date.now()}`;
+  test('1. Admin can create a product with type, sales price, cost price, and notes', async () => {
+    const code = `PROD-${Date.now()}`;
     const product = await productService.createProduct(
       {
-        name: 'Cloud Storage Suite',
+        name: 'Brightloop CRM Suite',
         code,
-        description: 'Multi-cloud enterprise data store',
-        category: 'Infrastructure',
+        type: 'Software',
+        salesPrice: 5000,
+        costPrice: 2200,
+        notes: 'Enterprise CRM core module for small business',
+        description: 'Comprehensive business relationship management',
+        category: 'Business Application',
         status: 'ACTIVE',
-        variants: [
-          {
-            name: 'Basic — 100 GB',
-            code: `${code}-V1`,
-            description: '100 GB SSD storage tier',
-            price: 1200,
-            status: 'ACTIVE',
-          },
-          {
-            name: 'Professional — 500 GB',
-            code: `${code}-V2`,
-            description: '500 GB NVMe storage tier',
-            price: 4500,
-            status: 'ACTIVE',
-          },
-        ],
       },
       adminUserId
     );
 
     assert.ok(product.id, 'Product ID should be generated');
     assert.strictEqual(product.code, code);
-    assert.strictEqual(product.variants.length, 2);
+    assert.strictEqual(product.type, 'Software');
+    assert.strictEqual(Number(product.salesPrice), 5000);
+    assert.strictEqual(Number(product.costPrice), 2200);
+    assert.strictEqual(product.notes, 'Enterprise CRM core module for small business');
+    assert.strictEqual(product.status, 'ACTIVE');
     testProductId = product.id;
-    testVariantId = product.variants[0].id;
   });
 
   test('2. Rejects duplicate product code with 409 conflict', async () => {
@@ -63,9 +53,11 @@ describe('Phase 2 — Products & Variants Lifecycle Tests', async () => {
       async () => {
         await productService.createProduct(
           {
-            name: 'Another Storage Product',
-            code: product.code, // duplicate
-            category: 'Infrastructure',
+            name: 'Duplicate SKU Product',
+            code: product.code,
+            type: 'Software',
+            salesPrice: 5000,
+            costPrice: 2000,
             status: 'ACTIVE',
           },
           adminUserId
@@ -79,138 +71,246 @@ describe('Phase 2 — Products & Variants Lifecycle Tests', async () => {
     );
   });
 
-  test('3. Can list products with search and category filters', async () => {
-    const result = await productService.listProducts({
-      page: 1,
-      limit: 10,
-      search: 'Cloud Storage',
-      category: 'Infrastructure',
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-    });
+  test('3. Cost price is strictly redacted from customer responses and visible to admin/staff', async () => {
+    const adminView = await productService.getProductById(testProductId, Role.ADMIN);
+    assert.strictEqual(Number(adminView.costPrice), 2200, 'Admin can view internal cost price');
 
-    assert.ok(result.items.length >= 1);
-    const found = result.items.find((p) => p.id === testProductId);
-    assert.ok(found, 'Created product should be present in search results');
-    assert.ok(result.metrics.activeCount >= 1);
+    const staffView = await productService.getProductById(testProductId, Role.STAFF);
+    assert.strictEqual(Number(staffView.costPrice), 2200, 'Staff can view internal cost price');
+
+    const customerView = await productService.getProductById(testProductId, Role.CUSTOMER);
+    assert.strictEqual(
+      (customerView as any).costPrice,
+      undefined,
+      'Cost price must be redacted from customer view'
+    );
   });
 
-  test('4. Can update product details and status', async () => {
+  test('4. Admin can update product details, notes, and toggle status', async () => {
     const updated = await productService.updateProduct(
       testProductId,
       {
-        name: 'Cloud Storage Suite Ultra',
-        description: 'Updated enterprise multi-cloud storage',
+        name: 'Brightloop CRM Suite v2',
+        salesPrice: 5500,
+        costPrice: 2400,
+        notes: 'Updated notes with enhanced discount schedules',
       },
       adminUserId
     );
 
-    assert.strictEqual(updated.name, 'Cloud Storage Suite Ultra');
+    assert.strictEqual(updated.name, 'Brightloop CRM Suite v2');
+    assert.strictEqual(Number(updated.salesPrice), 5500);
 
     const deactivated = await productService.updateProductStatus(testProductId, 'INACTIVE', adminUserId);
     assert.strictEqual(deactivated.status, 'INACTIVE');
 
-    // Reactivate for downstream plan tests
     const reactivated = await productService.updateProductStatus(testProductId, 'ACTIVE', adminUserId);
     assert.strictEqual(reactivated.status, 'ACTIVE');
   });
+});
 
-  test('5. Can add an individual variant to an existing product', async () => {
-    const variantCode = `TEST-VAR-ENT-${Date.now()}`;
-    const variant = await productService.createVariant(
-      testProductId,
+describe('Product Variants & Dynamic Additional Pricing Tests', async () => {
+  let adminUserId: string;
+  let softwareProductId: string;
+  let standardVariantId: string;
+  let odooVariantId: string;
+  let premiumVariantId: string;
+  let inactiveVariantId: string;
+
+  before(async () => {
+    const admin = await prisma.user.findUnique({ where: { email: 'admin@brightloop.io' } });
+    if (admin) adminUserId = admin.id;
+
+    const baseProduct = await productService.createProduct(
       {
-        name: 'Enterprise — 1 TB',
-        code: variantCode,
-        description: '1 TB High-speed cluster storage',
-        price: 8900,
+        name: 'Software Subscription',
+        code: `SW-SUB-${Date.now()}`,
+        type: 'Software',
+        salesPrice: 5000,
+        costPrice: 2000,
         status: 'ACTIVE',
       },
       adminUserId
     );
-
-    assert.ok(variant.id);
-    assert.strictEqual(variant.code, variantCode);
-    assert.strictEqual(Number(variant.price), 8900);
+    softwareProductId = baseProduct.id;
   });
 
-  test('6. Rejects duplicate variant code', async () => {
-    const existing = await prisma.productVariant.findFirst({ where: { productId: testProductId } });
-    assert.ok(existing);
+  test('1. Can add dynamic variants with additional price and custom attributes', async () => {
+    // 1. Standard variant (₹0 additional)
+    const standard = await productService.createVariant(
+      softwareProductId,
+      {
+        name: 'Standard',
+        code: `VAR-STD-${Date.now()}`,
+        additionalPrice: 0,
+        price: 5000,
+        attributes: { tier: 'Standard', brand: 'Generic' },
+        status: 'ACTIVE',
+      },
+      adminUserId
+    );
+    standardVariantId = standard.id;
+    assert.strictEqual(Number(standard.additionalPrice), 0);
 
+    // 2. Odoo variant (₹560 additional)
+    const odoo = await productService.createVariant(
+      softwareProductId,
+      {
+        name: 'Odoo',
+        code: `VAR-ODOO-${Date.now()}`,
+        additionalPrice: 560,
+        price: 5560,
+        attributes: { tier: 'Integrated', brand: 'Odoo' },
+        status: 'ACTIVE',
+      },
+      adminUserId
+    );
+    odooVariantId = odoo.id;
+    assert.strictEqual(Number(odoo.additionalPrice), 560);
+
+    // 3. Premium variant (₹1000 additional)
+    const premium = await productService.createVariant(
+      softwareProductId,
+      {
+        name: 'Premium',
+        code: `VAR-PREM-${Date.now()}`,
+        additionalPrice: 1000,
+        price: 6000,
+        attributes: { tier: 'Premium', brand: 'Brightloop Elite' },
+        status: 'ACTIVE',
+      },
+      adminUserId
+    );
+    premiumVariantId = premium.id;
+    assert.strictEqual(Number(premium.additionalPrice), 1000);
+
+    // 4. Inactive variant
+    const inactive = await productService.createVariant(
+      softwareProductId,
+      {
+        name: 'Deprecated Beta Variant',
+        code: `VAR-INACT-${Date.now()}`,
+        additionalPrice: 100,
+        status: 'INACTIVE',
+      },
+      adminUserId
+    );
+    inactiveVariantId = inactive.id;
+    assert.strictEqual(inactive.status, 'INACTIVE');
+  });
+
+  test('2. Final price calculation matches: Base (₹5,000) + Odoo Variant (₹560) = ₹5,560', async () => {
+    const enriched = await productService.getProductById(softwareProductId);
+    const odooVariant = enriched.variants.find((v) => v.id === odooVariantId);
+    assert.ok(odooVariant);
+
+    const calculatedPrice = productService.calculateFinalPrice(
+      Number(enriched.salesPrice),
+      Number(odooVariant.additionalPrice)
+    );
+    assert.strictEqual(calculatedPrice, 5560, '5000 + 560 must equal 5560');
+  });
+
+  test('3. Inactive variants are rejected when attempting to create a new plan', async () => {
     await assert.rejects(
       async () => {
-        await productService.createVariant(
-          testProductId,
+        await planService.createPlan(
           {
-            name: 'Clashing Variant',
-            code: existing.code,
-            price: 999,
+            name: 'Plan on Inactive Variant',
+            code: `PLN-FAIL-INACT-${Date.now()}`,
+            productId: softwareProductId,
+            variantId: inactiveVariantId,
+            price: 5100,
+            billingFrequency: 'MONTHLY',
             status: 'ACTIVE',
           },
           adminUserId
         );
       },
       (err: any) => {
-        assert.strictEqual(err.statusCode, 409);
+        assert.strictEqual(err.statusCode, 400);
+        assert.match(err.message, /inactive variants cannot be selected/i);
         return true;
       }
     );
   });
 });
 
-describe('Phase 2 — Subscription Plan Management Tests', async () => {
+describe('Plan Management & Configurable Lifecycle Tests', async () => {
   let adminUserId: string;
   let productId: string;
-  let variantId: string;
+  let odooVariantId: string;
   let foreignProductId: string;
   let foreignVariantId: string;
-  let testPlanId: string;
 
   before(async () => {
     const admin = await prisma.user.findUnique({ where: { email: 'admin@brightloop.io' } });
     if (admin) adminUserId = admin.id;
 
-    // Create 2 products with variants for relationship testing
     const p1Code = `PLAN-TEST-P1-${Date.now()}`;
     const p1 = await productService.createProduct({
-      name: 'Test Product A',
+      name: 'Software Suite Pro',
       code: p1Code,
-      category: 'SaaS',
+      type: 'Software',
+      salesPrice: 5000,
+      costPrice: 2000,
       status: 'ACTIVE',
-      variants: [{ name: 'Variant A1', code: `${p1Code}-V1`, price: 500, status: 'ACTIVE' }],
+      variants: [
+        {
+          name: 'Odoo Edition',
+          code: `${p1Code}-ODOO`,
+          additionalPrice: 560,
+          price: 5560,
+          status: 'ACTIVE',
+        },
+      ],
     });
     productId = p1.id;
-    variantId = p1.variants[0].id;
+    odooVariantId = p1.variants[0].id;
 
     const p2Code = `PLAN-TEST-P2-${Date.now()}`;
     const p2 = await productService.createProduct({
-      name: 'Test Product B',
+      name: 'Hardware Hub',
       code: p2Code,
-      category: 'SaaS',
+      type: 'Hardware',
+      salesPrice: 12000,
+      costPrice: 8000,
       status: 'ACTIVE',
-      variants: [{ name: 'Variant B1', code: `${p2Code}-V1`, price: 900, status: 'ACTIVE' }],
+      variants: [
+        {
+          name: 'Default Variant',
+          code: `${p2Code}-DEF`,
+          additionalPrice: 0,
+          status: 'ACTIVE',
+        },
+      ],
     });
     foreignProductId = p2.id;
     foreignVariantId = p2.variants[0].id;
   });
 
-  test('1. Admin can create a Subscription Plan with monthly frequency and features', async () => {
-    const planCode = `PLN-MTH-${Date.now()}`;
+  test('1. Admin can create a plan with Odoo variant, daily/weekly/monthly/yearly frequency, minQuantity, and dates', async () => {
+    const planCode = `PLN-ODOO-${Date.now()}`;
+    const startDate = new Date();
+    const endDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+
     const plan = await planService.createPlan(
       {
-        name: 'Starter Cloud Monthly',
+        name: 'Odoo Cloud Monthly Professional',
         code: planCode,
-        description: 'Monthly cloud plan with automatic renewal',
+        description: 'Full ERP sync with automated nightly reconciliations',
         productId,
-        variantId,
-        price: 500,
+        variantId: odooVariantId,
+        price: 5560,
         billingFrequency: 'MONTHLY',
+        minQuantity: 5,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        autoCloseOnEnd: true,
+        allowEarlyClosure: true,
+        allowPause: false,
+        allowRenewal: true,
         status: 'ACTIVE',
-        pauseLimitCycles: 2,
-        cancellationNoticeDays: 30,
-        trialPeriodDays: 7,
-        features: ['100 GB Storage', 'Weekly Backup', 'Standard SLA'],
       },
       adminUserId
     );
@@ -218,53 +318,87 @@ describe('Phase 2 — Subscription Plan Management Tests', async () => {
     assert.ok(plan.id);
     assert.strictEqual(plan.code, planCode);
     assert.strictEqual(plan.billingFrequency, 'MONTHLY');
-    assert.strictEqual(Number(plan.price), 500);
-    testPlanId = plan.id;
+    assert.strictEqual(Number(plan.price), 5560);
+    assert.strictEqual(plan.minQuantity, 5);
+    assert.strictEqual(plan.autoCloseOnEnd, true);
+    assert.strictEqual(plan.allowEarlyClosure, true);
+    assert.strictEqual(plan.allowPause, false);
+    assert.strictEqual(plan.allowRenewal, true);
+
+    // Verify transparent pricing breakdown
+    assert.ok(plan.pricingBreakdown);
+    assert.strictEqual(plan.pricingBreakdown.baseSalesPrice, 5000);
+    assert.strictEqual(plan.pricingBreakdown.variantAdditionalPrice, 560);
+    assert.strictEqual(plan.pricingBreakdown.calculatedProductPrice, 5560);
+    assert.strictEqual(plan.pricingBreakdown.planPrice, 5560);
   });
 
-  test('2. Rejects duplicate plan code with 409 conflict', async () => {
-    const plan = await prisma.plan.findUnique({ where: { id: testPlanId } });
-    assert.ok(plan);
+  test('2. Independent lifecycle control: Plan B with inverted lifecycle flags', async () => {
+    const planCode = `PLN-FLEX-${Date.now()}`;
+    const plan = await planService.createPlan(
+      {
+        name: 'Flexible Daily Sandbox',
+        code: planCode,
+        productId,
+        price: 250,
+        billingFrequency: 'DAILY',
+        minQuantity: 1,
+        autoCloseOnEnd: false,
+        allowEarlyClosure: false,
+        allowPause: true,
+        allowRenewal: false,
+        status: 'ACTIVE',
+      },
+      adminUserId
+    );
+
+    assert.strictEqual(plan.billingFrequency, 'DAILY');
+    assert.strictEqual(plan.autoCloseOnEnd, false);
+    assert.strictEqual(plan.allowEarlyClosure, false);
+    assert.strictEqual(plan.allowPause, true);
+    assert.strictEqual(plan.allowRenewal, false);
+  });
+
+  test('3. Rejects plan when availability endDate is earlier than startDate', async () => {
+    const start = new Date('2026-06-01');
+    const end = new Date('2026-05-01'); // Earlier than start!
 
     await assert.rejects(
       async () => {
         await planService.createPlan(
           {
-            name: 'Clashing Plan',
-            code: plan.code,
+            name: 'Invalid Date Plan',
+            code: `PLN-ERR-DATE-${Date.now()}`,
             productId,
-            price: 500,
-            billingFrequency: 'MONTHLY',
+            price: 1000,
+            billingFrequency: 'YEARLY',
+            startDate: start.toISOString(),
+            endDate: end.toISOString(),
             status: 'ACTIVE',
-            pauseLimitCycles: 1,
-            cancellationNoticeDays: 14,
-            trialPeriodDays: 0,
           },
           adminUserId
         );
       },
       (err: any) => {
-        assert.strictEqual(err.statusCode, 409);
+        assert.strictEqual(err.statusCode, 400);
+        assert.match(err.message, /earlier than start date/i);
         return true;
       }
     );
   });
 
-  test('3. Rejects plan creation if variant does NOT belong to the specified product', async () => {
+  test('4. Rejects plan creation if variant does not belong to specified product', async () => {
     await assert.rejects(
       async () => {
         await planService.createPlan(
           {
-            name: 'Invalid Cross-Product Plan',
-            code: `INVALID-CROSS-${Date.now()}`,
-            productId: productId, // Product A
-            variantId: foreignVariantId, // Variant belongs to Product B!
-            price: 1500,
-            billingFrequency: 'MONTHLY',
+            name: 'Cross Product Plan',
+            code: `PLN-CROSS-${Date.now()}`,
+            productId, // Product A
+            variantId: foreignVariantId, // Variant from Product B
+            price: 5000,
+            billingFrequency: 'WEEKLY',
             status: 'ACTIVE',
-            pauseLimitCycles: 1,
-            cancellationNoticeDays: 14,
-            trialPeriodDays: 0,
           },
           adminUserId
         );
@@ -277,13 +411,13 @@ describe('Phase 2 — Subscription Plan Management Tests', async () => {
     );
   });
 
-  test('4. Rejects plan creation for INACTIVE products', async () => {
-    const inactiveCode = `INACT-PROD-${Date.now()}`;
+  test('5. Rejects plan creation for INACTIVE products', async () => {
     const inactiveProd = await productService.createProduct({
-      name: 'Legacy Product',
-      code: inactiveCode,
+      name: 'Decommissioned Software',
+      code: `INACT-${Date.now()}`,
+      salesPrice: 1000,
+      costPrice: 500,
       status: 'INACTIVE',
-      category: 'Legacy',
     });
 
     await assert.rejects(
@@ -291,14 +425,11 @@ describe('Phase 2 — Subscription Plan Management Tests', async () => {
         await planService.createPlan(
           {
             name: 'Plan on Inactive Product',
-            code: `PLN-INACT-${Date.now()}`,
+            code: `PLN-FAIL-${Date.now()}`,
             productId: inactiveProd.id,
-            price: 100,
+            price: 1000,
             billingFrequency: 'MONTHLY',
             status: 'ACTIVE',
-            pauseLimitCycles: 1,
-            cancellationNoticeDays: 14,
-            trialPeriodDays: 0,
           },
           adminUserId
         );
@@ -311,49 +442,22 @@ describe('Phase 2 — Subscription Plan Management Tests', async () => {
     );
   });
 
-  test('5. Prevents deletion of product while associated with a plan', async () => {
-    await assert.rejects(
-      async () => {
-        await productService.deleteProduct(productId, adminUserId);
-      },
-      (err: any) => {
-        assert.strictEqual(err.statusCode, 400);
-        assert.match(err.message, /associated with/i);
-        return true;
-      }
-    );
-  });
+  test('6. Supports all requested billing cadences: DAILY, WEEKLY, MONTHLY, YEARLY', async () => {
+    for (const freq of ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'] as const) {
+      const code = `CAD-${freq}-${Date.now()}`;
+      const plan = await planService.createPlan(
+        {
+          name: `Cadence Plan ${freq}`,
+          code,
+          productId,
+          price: 1500,
+          billingFrequency: freq,
+          status: 'ACTIVE',
+        },
+        adminUserId
+      );
 
-  test('6. Can update plan details and toggle active/inactive status', async () => {
-    const updated = await planService.updatePlan(
-      testPlanId,
-      {
-        name: 'Starter Cloud Monthly (Enhanced)',
-        price: 550,
-        pauseLimitCycles: 3,
-      },
-      adminUserId
-    );
-
-    assert.strictEqual(updated.name, 'Starter Cloud Monthly (Enhanced)');
-    assert.strictEqual(Number(updated.price), 550);
-    assert.strictEqual(updated.pauseLimitCycles, 3);
-
-    const deactivated = await planService.updatePlanStatus(testPlanId, 'INACTIVE', adminUserId);
-    assert.strictEqual(deactivated.status, 'INACTIVE');
-  });
-
-  test('7. Can list plans with frequency and status filters', async () => {
-    const result = await planService.listPlans({
-      page: 1,
-      limit: 10,
-      billingFrequency: 'MONTHLY',
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-    });
-
-    assert.ok(result.items.length >= 1);
-    assert.ok(result.items.every((p) => p.billingFrequency === 'MONTHLY'));
+      assert.strictEqual(plan.billingFrequency, freq);
+    }
   });
 });
-

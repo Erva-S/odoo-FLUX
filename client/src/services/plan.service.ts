@@ -20,6 +20,13 @@ export interface CreatePlanPayload {
   variantId?: string | null;
   price: number;
   billingFrequency: string;
+  minQuantity?: number;
+  startDate?: string | null;
+  endDate?: string | null;
+  autoCloseOnEnd?: boolean;
+  allowEarlyClosure?: boolean;
+  allowPause?: boolean;
+  allowRenewal?: boolean;
   status?: string;
   pauseLimitCycles?: number;
   cancellationNoticeDays?: number;
@@ -35,6 +42,13 @@ export interface UpdatePlanPayload {
   variantId?: string | null;
   price?: number;
   billingFrequency?: string;
+  minQuantity?: number;
+  startDate?: string | null;
+  endDate?: string | null;
+  autoCloseOnEnd?: boolean;
+  allowEarlyClosure?: boolean;
+  allowPause?: boolean;
+  allowRenewal?: boolean;
   status?: string;
   pauseLimitCycles?: number;
   cancellationNoticeDays?: number;

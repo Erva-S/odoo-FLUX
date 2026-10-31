@@ -92,8 +92,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
+<<<<<<< HEAD
+    if (!user) {
+      // Default to customer if not found
+      user = {
+        id: `user-${Date.now()}`,
+        email: normalized,
+        name: normalized.split("@")[0],
+        role: role || "customer",
+        createdAt: new Date().toISOString(),
+      };
+    }
+
+    saveUser(user);
+    return true;
+  };
+
+  const signup = (params: { email: string; name: string; companyName?: string }) => {
+    const normalized = params.email.toLowerCase().trim();
+    const existing =
+      dataStore.customers.some((c) => c.email.toLowerCase() === normalized) ||
+      DEMO_PROFILES.some((p) => p.email.toLowerCase() === normalized);
+    if (existing) {
+      return { success: false, error: "An account with this email already exists." };
+    }
+
+    const newUser: Profile = {
+      id: `cust-${Date.now()}`,
+      email: normalized,
+      name: params.name,
+      role: "customer",
+      companyName: params.companyName || `${params.name}'s Organization`,
+      createdAt: new Date().toISOString(),
+=======
     return () => {
       subscription.unsubscribe();
+>>>>>>> main
     };
   }, [refreshUser, supabase]);
 

@@ -6,17 +6,46 @@ import { Zap, Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { NeoInput } from "@/components/ui/NeoInput";
 import { useToast } from "@/components/ui/ToastContext";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
-  const { success } = useToast();
+  const { success, error } = useToast();
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    setIsSubmitted(true);
-    success(`Password reset link dispatched to ${email}`);
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes("@")) {
+      error("Please enter a valid email address.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 1. Dispatch recovery email via Supabase Auth
+      try {
+        const supabase = createClient();
+        const { error: supaErr } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (supaErr) {
+          console.warn("Supabase resetPassword note:", supaErr.message);
+        }
+      } catch (clientErr) {
+        console.warn("Supabase client init:", clientErr);
+      }
+
+      // 2. Generic confirmation without exposing email existence
+      setIsSubmitted(true);
+      success("Password recovery request processed.");
+    } catch (err: any) {
+      error(err.message || "Failed to process request.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -48,9 +77,9 @@ export default function ForgotPasswordPage() {
         {isSubmitted ? (
           <div className="bg-neoSage/40 border-2 border-black rounded-[10px] p-4 text-center space-y-3">
             <CheckCircle2 className="w-8 h-8 text-black mx-auto" />
-            <p className="font-bold text-sm">Reset Link Sent</p>
-            <p className="text-xs text-neutral-700">
-              Check your inbox at <strong>{email}</strong> for instructions to reset your password.
+            <p className="font-bold text-sm">Check Your Inbox</p>
+            <p className="text-xs text-neutral-700 leading-relaxed">
+              If an account exists with this email address, you will receive a password reset link shortly.
             </p>
             <Link href="/login" className="inline-block mt-2">
               <NeoButton size="compact" variant="secondary">
@@ -70,8 +99,8 @@ export default function ForgotPasswordPage() {
               required
             />
 
-            <NeoButton type="submit" variant="primary" className="w-full">
-              Send Password Reset Link
+            <NeoButton type="submit" variant="primary" className="w-full" disabled={loading}>
+              {loading ? "Sending Reset Link..." : "Send Password Reset Link"}
             </NeoButton>
           </form>
         )}

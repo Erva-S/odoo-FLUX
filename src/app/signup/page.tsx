@@ -8,6 +8,7 @@ import { NeoButton } from "@/components/ui/NeoButton";
 import { NeoInput } from "@/components/ui/NeoInput";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useToast } from "@/components/ui/ToastContext";
+import { createClient } from "@/lib/supabase/client";
 import clsx from "clsx";
 
 export default function SignupPage() {
@@ -19,9 +20,10 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Live password validation checks
-  const hasLength = password.length > 8;
+  const hasLength = password.length > 8; // More than eight characters
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
   const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
@@ -34,14 +36,52 @@ export default function SignupPage() {
       return;
     }
 
+<<<<<<< HEAD
+    setLoading(true);
+=======
     const res = await signup({ email, password, name, companyName });
     if (!res.success) {
       error(res.error || "Failed to create account.");
       return;
     }
+>>>>>>> main
 
-    success("Account created successfully! Welcome to Brightloop.");
-    router.push("/portal");
+    try {
+      // 1. Supabase Auth registration
+      try {
+        const supabase = createClient();
+        const { error: supaErr } = await supabase.auth.signUp({
+          email: email.trim().toLowerCase(),
+          password,
+          options: {
+            data: {
+              name: name.trim(),
+              company_name: companyName.trim(),
+            },
+          },
+        });
+        if (supaErr && !supaErr.message.includes("User already registered")) {
+          console.warn("Supabase signup:", supaErr.message);
+        }
+      } catch (supaErr) {
+        console.warn("Supabase client init:", supaErr);
+      }
+
+      // 2. Local application account creation
+      const res = signup({ email, name, companyName });
+      if (!res.success) {
+        error(res.error || "Failed to create account.");
+        setLoading(false);
+        return;
+      }
+
+      success("Account created successfully! Welcome to Brightloop.");
+      router.push("/portal");
+    } catch (err: any) {
+      error(err.message || "Failed to create account.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

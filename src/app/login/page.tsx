@@ -12,6 +12,29 @@ import { UserRole } from "@/types/database.types";
 
 function LoginContent() {
   const router = useRouter();
+<<<<<<< HEAD
+  const { login } = useAuth();
+  const { success, error } = useToast();
+
+  const [selectedRole, setSelectedRole] = useState<"admin" | "staff" | "customer">("admin");
+  const [email, setEmail] = useState("admin@brightloop.io");
+  const [password, setPassword] = useState("Admin@Brightloop123!");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSelectRole = (role: "admin" | "staff" | "customer") => {
+    setSelectedRole(role);
+    if (role === "admin") {
+      setEmail("admin@brightloop.io");
+      setPassword("Admin@Brightloop123!");
+    } else if (role === "staff") {
+      setEmail("staff@brightloop.io");
+      setPassword("Staff@Brightloop123!");
+    } else {
+      setEmail("customer@brightloop.io");
+      setPassword("Customer@Brightloop123!");
+    }
+  };
+=======
   const searchParams = useSearchParams();
   const nextUrl = searchParams.get("next");
   const authErrorParam = searchParams.get("error");
@@ -23,6 +46,7 @@ function LoginContent() {
   const [email, setEmail] = useState("admin@brightloop.io");
   const [password, setPassword] = useState("Bright@2026!");
   const [loading, setLoading] = useState(false);
+>>>>>>> main
 
   const handleTabChange = (role: UserRole) => {
     setActiveTab(role);
@@ -45,6 +69,14 @@ function LoginContent() {
       return;
     }
 
+<<<<<<< HEAD
+    login(email, selectedRole);
+    success(`Welcome back! Signed in with ${selectedRole.toUpperCase()} credentials.`);
+    if (selectedRole === "customer" || email.includes("customer")) {
+      router.push("/portal");
+    } else {
+      router.push("/dashboard");
+=======
     try {
       setLoading(true);
       const res = await login(email, password, activeTab);
@@ -68,6 +100,7 @@ function LoginContent() {
       toastError(msg);
     } finally {
       setLoading(false);
+>>>>>>> main
     }
   };
 
@@ -94,6 +127,55 @@ function LoginContent() {
           <h1 className="text-3xl font-heading font-black tracking-tight text-neoBlack">
             Sign In
           </h1>
+<<<<<<< HEAD
+          <p className="text-sm text-neutral-600 mt-1 font-medium">
+            Select your role and enter credentials to sign in.
+          </p>
+        </div>
+
+        {/* Role Selector */}
+        <div className="bg-neoCanvas border-2 border-black rounded-[10px] p-3 space-y-2">
+          <div className="text-xs uppercase font-extrabold text-neutral-600 tracking-wider flex items-center justify-between">
+            <span>Select Role</span>
+            <span className="text-[10px] font-mono font-bold text-black uppercase">
+              Current: {selectedRole}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handleSelectRole("admin")}
+              className={`px-2 py-2 text-xs font-bold border-2 border-black rounded-[8px] transition-all ${
+                selectedRole === "admin"
+                  ? "bg-neoYellow text-black shadow-neo-sm font-black translate-x-0.5 translate-y-0.5"
+                  : "bg-white text-neutral-700 hover:bg-neutral-100"
+              }`}
+            >
+              Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSelectRole("staff")}
+              className={`px-2 py-2 text-xs font-bold border-2 border-black rounded-[8px] transition-all ${
+                selectedRole === "staff"
+                  ? "bg-neoYellow text-black shadow-neo-sm font-black translate-x-0.5 translate-y-0.5"
+                  : "bg-white text-neutral-700 hover:bg-neutral-100"
+              }`}
+            >
+              Staff
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSelectRole("customer")}
+              className={`px-2 py-2 text-xs font-bold border-2 border-black rounded-[8px] transition-all ${
+                selectedRole === "customer"
+                  ? "bg-neoYellow text-black shadow-neo-sm font-black translate-x-0.5 translate-y-0.5"
+                  : "bg-white text-neutral-700 hover:bg-neutral-100"
+              }`}
+            >
+              Customer
+            </button>
+=======
           <p className="text-xs text-neutral-600 mt-1 font-bold">
             Secure multi-role authentication powered by Supabase & PostgreSQL.
           </p>
@@ -103,6 +185,7 @@ function LoginContent() {
           <div className="p-3 bg-red-100 border-2 border-black rounded-[8px] text-xs font-bold text-statusRed flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{decodeURIComponent(authErrorParam)}</span>
+>>>>>>> main
           </div>
         )}
 
@@ -171,7 +254,7 @@ function LoginContent() {
               </Link>
             </div>
             <NeoInput
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               leftIcon={<Lock className="w-4 h-4" />}

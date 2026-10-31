@@ -112,16 +112,8 @@ export default function CustomerPortalPage() {
           </nav>
         </div>
 
-        {/* User profile & console switch */}
+        {/* User profile & session controls */}
         <div className="flex items-center gap-3">
-          <NeoButton
-            variant="secondary"
-            size="compact"
-            onClick={() => switchDemoRole("admin")}
-            className="hidden md:inline-flex"
-          >
-            Admin View
-          </NeoButton>
           <div className="flex items-center gap-2 bg-white border-2 border-black rounded-[8px] px-3 py-1.5 shadow-neo-sm">
             <div className="w-7 h-7 rounded-full bg-neoDark text-white flex items-center justify-center font-bold text-xs">
               {currentUser?.name ? currentUser.name[0] : "C"}
