@@ -43,20 +43,38 @@ Subscriptly is a modern, enterprise-grade Subscription Management and Revenue Op
 
 ```
 odoo-FLUX/
-├── client/                     # Frontend SPA (React + Vite + TypeScript)
+├── client/                     # Frontend SPA (React 18 + Vite + TypeScript)
+│   ├── public/
 │   ├── src/
-│   │   ├── components/         # Reusable UI components, Logo, ComingSoon, DunningAlertBanner
-│   │   ├── context/            # AuthContext (persistent sessions, login, logout, refresh)
-│   │   ├── hooks/              # useAuth hook
+│   │   ├── assets/             # Brand logos, icons, fonts, and screenshots
+│   │   │   ├── fonts/
+│   │   │   ├── icons/
+│   │   │   └── images/         # Reference captures from Stitch exports
+│   │   ├── components/         # Reusable design system components
+│   │   │   ├── common/         # Logo, ComingSoon, DunningAlertBanner
+│   │   │   ├── layout/         # Header, Sidebar, UserMenu navigation components
+│   │   │   └── ui/             # Badge, Button, Card, Input, Modal primitives
+│   │   ├── context/            # AuthContext (persistent sessions, login, logout)
+│   │   ├── features/           # Feature-sliced modules (components & pages)
+│   │   │   ├── admin/
+│   │   │   │   ├── components/ # MetricsKpiBento, PlanBlueprintCard, filters
+│   │   │   │   └── pages/      # AdminDashboard, CustomerManagement, Products, Plans, Staff
+│   │   │   ├── auth/
+│   │   │   │   ├── components/ # AuthHeader, AuthCard
+│   │   │   │   └── pages/      # Login, Register, ForgotPassword, ResetPassword
+│   │   │   ├── customer/
+│   │   │   │   ├── components/ # SubscriptionStatusCard, BillingSummary
+│   │   │   │   └── pages/      # CustomerPortalPage, CustomerProfilePage
+│   │   │   └── staff/
+│   │   │       ├── components/ # StaffTaskCard, OperationsFilter
+│   │   │       └── pages/      # StaffDashboardPage, OperationalQueuePage
+│   │   ├── hooks/              # Custom React hooks (useAuth)
 │   │   ├── layouts/            # AuthLayout & DashboardLayout (role-aware navigation)
-│   │   ├── pages/
-│   │   │   ├── admin/          # Admin Dashboard & Staff Management
-│   │   │   ├── auth/           # Login, Customer Registration, Forgot & Reset Password
-│   │   │   ├── customer/       # Customer Portal & Profile Editor
-│   │   │   └── staff/          # Staff Operational Dashboard
-│   │   ├── routes/             # AppRoutes & ProtectedRoute role guards
+│   │   ├── routes/             # AppRoutes with RBAC route protection
 │   │   ├── services/           # Axios API services for auth, staff, customer, admin
+│   │   ├── styles/             # Global design tokens and Tailwind stylesheets (globals.css)
 │   │   ├── types/              # TypeScript models and payloads
+│   │   ├── utils/              # Formatting helpers (INR currency, dates, truncators)
 │   │   ├── App.tsx
 │   │   ├── index.css           # Tailwind design tokens
 │   │   └── main.tsx
@@ -82,16 +100,26 @@ odoo-FLUX/
 │   │   ├── utils/              # Email transporter, JWT, token hashing, password validation
 │   │   ├── validators/         # Zod schemas for auth, staff, customer
 │   │   ├── app.ts              # Express application setup
-│   │   └── index.ts            # Server entrypoint with graceful shutdown
+│   │   ├── server.ts           # Server entrypoint
+│   │   └── index.ts            # Server bootstrap with graceful shutdown
 │   ├── .env.example
 │   ├── package.json
 │   └── tsconfig.json
 │
-├── precision_finops/           # Reference design specifications & tokens
-├── admin_dashboard_subscriptly/# Approved UI reference screen for Admin Dashboard
-├── sign_in_subscriptly/        # Approved UI reference screen for Sign In
-├── package.json                # Monorepo management scripts
+├── docs/                       # Project documentation & Stitch design references
+│   └── stitch-designs/         # Preserved original HTML & screen captures from Stitch
+│       ├── admin_business_overview_dashboard/
+│       ├── customer_management_360_view/
+│       ├── precision_billing/
+│       ├── product_variant_management/
+│       └── subscription_plans_configuration/
+│
+├── scripts/                    # Monorepo development orchestration & database daemons
+│   ├── dev.mjs                 # Single-command launcher for DB, API server, and Vite client
+│   └── start-db.mjs            # PostgreSQL cluster daemon manager (pg_ctl)
+├── .env.example
 ├── .gitignore
+├── package.json                # Monorepo management scripts
 └── README.md
 ```
 

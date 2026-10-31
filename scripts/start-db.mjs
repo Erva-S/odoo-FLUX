@@ -36,7 +36,7 @@ export async function stopPostgres(targetPort = 5433) {
     try {
       execSync(`"${pgCtl}" stop -D "${pgDataDir}" -m fast`, { stdio: 'ignore', timeout: 5000 });
       console.log(`\x1b[33m[db]\x1b[0m PostgreSQL cleanly stopped on port ${targetPort}.`);
-    } catch {}
+    } catch { }
   }
 }
 
@@ -68,11 +68,11 @@ export async function ensurePostgresRunning(targetPort = 5433) {
       } catch {
         fs.unlinkSync(pidFile);
       }
-    } catch {}
+    } catch { }
   }
 
   console.log(`\x1b[32m[db]\x1b[0m Starting Subscriptly PostgreSQL daemon on port ${targetPort}...`);
-  
+
   let pgProc = null;
   if (fs.existsSync(pgCtl)) {
     try {

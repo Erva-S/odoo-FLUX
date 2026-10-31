@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAdminDashboard } from '../../services/admin.service.js';
-import { AdminDashboardData } from '../../types/dashboard.js';
-import { DunningAlertBanner } from '../../components/common/DunningAlertBanner.js';
+import { fetchAdminDashboard } from '../../../services/admin.service.js';
+import { AdminDashboardData } from '../../../types/dashboard.js';
+import { DunningAlertBanner } from '../../../components/common/DunningAlertBanner.js';
 import {
   Calendar,
   Filter,

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext.js';
-import { extractErrorMessage } from '../../services/api.js';
-import { Logo } from '../../components/common/Logo.js';
+import { useAuth } from '../../../context/AuthContext.js';
+import { extractErrorMessage } from '../../../services/api.js';
+import { Logo } from '../../../components/common/Logo.js';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 
 type DemoRole = 'admin' | 'staff' | 'customer';
