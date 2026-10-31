@@ -1,11 +1,27 @@
 {
-  "name": "brightloop-billing",
+  "name": "subscriptly",
   "version": "1.0.0",
   "private": true,
+  "description": "Subscriptly Enterprise Subscription Management Platform",
+  "workspaces": [
+    "server",
+    "client"
+  ],
   "scripts": {
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "node scripts/dev.mjs",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "dev:next": "next dev",
+    "build": "npm --prefix server run build && npm --prefix client run build",
+    "build:server": "npm --prefix server run build",
+    "build:client": "npm --prefix client run build",
+    "build:next": "next build",
+    "start:next": "next start",
+    "lint": "next lint",
+    "test": "npm --prefix server test",
+    "seed": "npm --prefix server run prisma:seed",
+    "prisma:push": "npm --prefix server run prisma:push",
+    "prisma:generate": "npm --prefix server run prisma:generate"
   },
   "dependencies": {
     "clsx": "^2.1.1",
