@@ -163,6 +163,19 @@ export function DashboardLayout() {
               <Users className="w-4 h-4" />
               <span>Customers</span>
               <span className="ml-auto text-[10px] uppercase font-bold text-tertiary bg-tertiary-fixed/40 px-1.5 py-0.5 rounded">360°</span>
+<<<<<<< HEAD
+            </NavLink>
+            <NavLink to="/staff/products" className={navLinkClasses}>
+              <Package className="w-4 h-4" />
+              <span>Products</span>
+              <span className="ml-auto text-[10px] uppercase font-bold text-secondary bg-secondary-fixed/40 px-1.5 py-0.5 rounded">Catalog</span>
+            </NavLink>
+            <NavLink to="/staff/plans" className={navLinkClasses}>
+              <Layers className="w-4 h-4" />
+              <span>Plans</span>
+              <span className="ml-auto text-[10px] uppercase font-bold text-primary bg-primary-fixed/40 px-1.5 py-0.5 rounded">Engine</span>
+=======
+>>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
             </NavLink>
             <NavLink to="/staff/quotations" className={navLinkClasses}>
               <FileText className="w-4 h-4" />

@@ -5,19 +5,13 @@ import {
   ShieldCheck,
   AlertTriangle,
   Search,
-  Filter,
   Download,
   Plus,
   TrendingUp,
   FileText,
   CreditCard,
-  Clock,
-  X,
-  ExternalLink,
   ChevronRight,
-  MoreVertical,
   CheckCircle2,
-  RefreshCw,
 } from 'lucide-react';
 import { Badge } from '../../../components/ui/Badge.js';
 import { Button } from '../../../components/ui/Button.js';
@@ -145,7 +139,6 @@ export function CustomerManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'subs' | 'invoices' | 'payments' | 'audit'>('subs');
 
-  // New Customer Form State
   const [newCompanyName, setNewCompanyName] = useState('');
   const [newGstin, setNewGstin] = useState('');
   const [newContactName, setNewContactName] = useState('');
@@ -201,9 +194,8 @@ export function CustomerManagementPage() {
 
   return (
     <div className="space-y-6">
-      {/* 1. Header Metrics Block (Stitch 360 KPIs) */}
+      {/* 1. Header Metrics Block */}
       <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        {/* Total Portfolios */}
         <div className="relative overflow-hidden bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col justify-between group">
           <div className="flex items-center justify-between">
             <span className="font-label-caps text-xs text-on-surface-variant uppercase tracking-wider font-semibold">
@@ -214,9 +206,7 @@ export function CustomerManagementPage() {
             </span>
           </div>
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-3xl font-bold tracking-tight text-on-surface font-headline-xl">
-              2,840
-            </span>
+            <span className="text-3xl font-bold tracking-tight text-on-surface font-headline-xl">2,840</span>
             <Badge variant="success" size="sm">
               <TrendingUp className="w-3 h-3 inline mr-0.5" /> +8.4%
             </Badge>
@@ -227,7 +217,6 @@ export function CustomerManagementPage() {
           </div>
         </div>
 
-        {/* Active Subscribers */}
         <div className="relative overflow-hidden bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col justify-between group">
           <div className="flex items-center justify-between">
             <span className="font-label-caps text-xs text-on-surface-variant uppercase tracking-wider font-semibold">
@@ -238,9 +227,7 @@ export function CustomerManagementPage() {
             </span>
           </div>
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-3xl font-bold tracking-tight text-on-surface font-headline-xl">
-              1,428
-            </span>
+            <span className="text-3xl font-bold tracking-tight text-on-surface font-headline-xl">1,428</span>
             <span className="text-xs text-on-surface-variant font-data-mono">50.28% ratio</span>
           </div>
           <div className="mt-2 flex items-center gap-2">
@@ -251,7 +238,6 @@ export function CustomerManagementPage() {
           </div>
         </div>
 
-        {/* High-Value Accounts */}
         <div className="relative overflow-hidden bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col justify-between group">
           <div className="flex items-center justify-between">
             <span className="font-label-caps text-xs text-on-surface-variant uppercase tracking-wider font-semibold">
@@ -262,9 +248,7 @@ export function CustomerManagementPage() {
             </span>
           </div>
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-3xl font-bold tracking-tight text-on-surface font-headline-xl">
-              312
-            </span>
+            <span className="text-3xl font-bold tracking-tight text-on-surface font-headline-xl">312</span>
             <Badge variant="indigo" size="sm">
               ARR Driver
             </Badge>
@@ -275,7 +259,6 @@ export function CustomerManagementPage() {
           </div>
         </div>
 
-        {/* At-Risk / Overdue */}
         <div className="relative overflow-hidden bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col justify-between group">
           <div className="flex items-center justify-between">
             <span className="font-label-caps text-xs text-error uppercase tracking-wider font-semibold">
@@ -300,10 +283,9 @@ export function CustomerManagementPage() {
         </div>
       </section>
 
-      {/* 2. Workspace Filter Strip & Interactive Action Bar */}
+      {/* 2. Filter Strip */}
       <section className="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant/20 shadow-sm flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3 flex-1">
-          {/* Search Input */}
           <div className="relative min-w-[280px] flex-1 max-w-md">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
             <input
@@ -315,7 +297,6 @@ export function CustomerManagementPage() {
             />
           </div>
 
-          {/* Segmented Status Badges Toggle */}
           <div className="flex items-center bg-surface-container-low p-1 rounded-lg gap-1">
             {['All', 'Active', 'Grace Period', 'Overdue', 'Closed'].map((status) => (
               <button
@@ -333,7 +314,6 @@ export function CustomerManagementPage() {
             ))}
           </div>
 
-          {/* Tier Dropdown Filter */}
           <div className="relative">
             <select
               value={tierFilter}
@@ -348,7 +328,6 @@ export function CustomerManagementPage() {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex items-center gap-2 self-end xl:self-auto">
           <Button variant="outline" size="md" leftIcon={<Download className="w-4 h-4" />}>
             Export GST CSV
@@ -366,21 +345,16 @@ export function CustomerManagementPage() {
 
       {/* 3. Master Data Matrix + Dynamic Customer 360 Slideout Layout */}
       <div className="grid grid-cols-1 2xl:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Master Customer Table View */}
         <div className="2xl:col-span-7 flex flex-col gap-4">
           <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden flex flex-col">
             <div className="px-5 py-4 bg-surface-container-lowest flex items-center justify-between border-b border-outline-variant/20">
               <div className="flex items-center gap-2">
-                <h3 className="font-headline-sm text-base font-semibold text-on-surface">
-                  Client Registries
-                </h3>
+                <h3 className="font-headline-sm text-base font-semibold text-on-surface">Client Registries</h3>
                 <span className="px-2 py-0.5 rounded-full bg-surface-container-high font-data-mono text-[11px] text-on-surface-variant">
                   Showing {filteredCustomers.length} of {customers.length}
                 </span>
               </div>
-              <div className="text-xs text-on-surface-variant font-label-default">
-                Sorted by: High ARR
-              </div>
+              <div className="text-xs text-on-surface-variant font-label-default">Sorted by: High ARR</div>
             </div>
 
             <div className="overflow-x-auto">
@@ -414,9 +388,7 @@ export function CustomerManagementPage() {
                               {cust.name.substring(0, 2).toUpperCase()}
                             </div>
                             <div className="flex flex-col min-w-0">
-                              <span className="font-semibold text-on-surface truncate text-sm">
-                                {cust.name}
-                              </span>
+                              <span className="font-semibold text-on-surface truncate text-sm">{cust.name}</span>
                               <span className="font-data-mono text-[11px] text-on-surface-variant truncate">
                                 GST: {cust.gstin}
                               </span>
@@ -425,12 +397,8 @@ export function CustomerManagementPage() {
                         </td>
                         <td className="py-3 px-3">
                           <div className="flex flex-col">
-                            <span className="text-xs font-medium text-on-surface truncate">
-                              {cust.contactName}
-                            </span>
-                            <span className="text-[11px] text-on-surface-variant truncate">
-                              {cust.contactEmail}
-                            </span>
+                            <span className="text-xs font-medium text-on-surface truncate">{cust.contactName}</span>
+                            <span className="text-[11px] text-on-surface-variant truncate">{cust.contactEmail}</span>
                           </div>
                         </td>
                         <td className="py-3 px-3 text-center">
@@ -467,13 +435,6 @@ export function CustomerManagementPage() {
                       </tr>
                     );
                   })}
-                  {filteredCustomers.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-on-surface-variant text-sm">
-                        No customer accounts match your current filter criteria.
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
@@ -483,7 +444,6 @@ export function CustomerManagementPage() {
         {/* Right Column: Customer 360 Inspection Card */}
         <div className="2xl:col-span-5 flex flex-col gap-4">
           <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm p-6 sticky top-20">
-            {/* 360 Header */}
             <div className="flex items-start justify-between pb-5 border-b border-outline-variant/20">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-primary text-on-primary font-bold text-lg flex items-center justify-center shadow-md">
@@ -491,9 +451,7 @@ export function CustomerManagementPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-on-surface font-headline-sm">
-                      {selectedCustomer.name}
-                    </h2>
+                    <h2 className="text-lg font-bold text-on-surface font-headline-sm">{selectedCustomer.name}</h2>
                     <Badge variant="primary" size="sm">
                       {selectedCustomer.tier}
                     </Badge>
@@ -503,29 +461,18 @@ export function CustomerManagementPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
-                  Edit
-                </Button>
-                <Button variant="primary" size="sm">
-                  + Quote
-                </Button>
-              </div>
             </div>
 
-            {/* Quick Metrics Strip */}
             <div className="grid grid-cols-3 gap-3 my-4 p-3 bg-surface-container-low rounded-xl">
               <div>
                 <span className="text-[10px] uppercase font-semibold text-outline tracking-wider font-label-caps">
-                  Monthly Run Rate
+                  Run Rate
                 </span>
-                <p className="text-sm font-bold text-on-surface font-data-mono mt-0.5">
-                  {selectedCustomer.mrr}
-                </p>
+                <p className="text-sm font-bold text-on-surface font-data-mono mt-0.5">{selectedCustomer.mrr}</p>
               </div>
               <div>
                 <span className="text-[10px] uppercase font-semibold text-outline tracking-wider font-label-caps">
-                  Health Score
+                  Health
                 </span>
                 <p className="text-sm font-bold text-tertiary font-data-mono mt-0.5 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
@@ -534,23 +481,18 @@ export function CustomerManagementPage() {
               </div>
               <div>
                 <span className="text-[10px] uppercase font-semibold text-outline tracking-wider font-label-caps">
-                  Outstanding
+                  Balance
                 </span>
-                <p className="text-sm font-bold text-on-surface font-data-mono mt-0.5">
-                  {selectedCustomer.balance}
-                </p>
+                <p className="text-sm font-bold text-on-surface font-data-mono mt-0.5">{selectedCustomer.balance}</p>
               </div>
             </div>
 
-            {/* Navigation Tabs */}
             <div className="flex border-b border-outline-variant/20 mb-4">
               <button
                 type="button"
                 onClick={() => setActiveTab('subs')}
                 className={`pb-2.5 px-3 text-xs font-semibold border-b-2 transition-colors ${
-                  activeTab === 'subs'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                  activeTab === 'subs' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant'
                 }`}
               >
                 Subscriptions ({selectedCustomer.subscriptionsCount})
@@ -559,156 +501,24 @@ export function CustomerManagementPage() {
                 type="button"
                 onClick={() => setActiveTab('invoices')}
                 className={`pb-2.5 px-3 text-xs font-semibold border-b-2 transition-colors ${
-                  activeTab === 'invoices'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-on-surface-variant hover:text-on-surface'
+                  activeTab === 'invoices' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant'
                 }`}
               >
-                Invoices & Tax
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('payments')}
-                className={`pb-2.5 px-3 text-xs font-semibold border-b-2 transition-colors ${
-                  activeTab === 'payments'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                AutoPay / Mandate
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('audit')}
-                className={`pb-2.5 px-3 text-xs font-semibold border-b-2 transition-colors ${
-                  activeTab === 'audit'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                Audit Trail
+                Invoices
               </button>
             </div>
 
-            {/* Tab Contents */}
             {activeTab === 'subs' && (
               <div className="space-y-3">
                 <div className="p-3.5 rounded-lg border border-outline-variant/20 bg-surface-container-lowest">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-semibold text-on-surface">
-                        Core Subscription Suite (Enterprise Tier)
-                      </h4>
-                      <p className="text-xs text-on-surface-variant">
-                        50 Seats • Billed Annually • Auto-renew on Nov 15
-                      </p>
+                      <h4 className="text-sm font-semibold text-on-surface">Core Subscription Suite</h4>
+                      <p className="text-xs text-on-surface-variant">50 Seats • Billed Annually</p>
                     </div>
                     <Badge variant="success" size="sm">
                       Active
                     </Badge>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-xs text-on-surface-variant pt-2 border-t border-outline-variant/10">
-                    <span>Rate: ₹14,500/seat/yr</span>
-                    <span className="font-semibold text-on-surface font-data-mono">
-                      ₹7,25,000 / yr
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-lg border border-outline-variant/20 bg-surface-container-lowest">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-semibold text-on-surface">
-                        API Connector & Webhook Add-on
-                      </h4>
-                      <p className="text-xs text-on-surface-variant">
-                        Dedicated throughput • 5,000,000 calls/mo
-                      </p>
-                    </div>
-                    <Badge variant="primary" size="sm">
-                      Active
-                    </Badge>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-xs text-on-surface-variant pt-2 border-t border-outline-variant/10">
-                    <span>Usage Bucket A</span>
-                    <span className="font-semibold text-on-surface font-data-mono">
-                      ₹48,000 / mo
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'invoices' && (
-              <div className="space-y-2">
-                {[
-                  { id: 'INV-2026-0881', date: 'Oct 01, 2026', amount: '₹1,53,333', status: 'Paid' },
-                  { id: 'INV-2026-0744', date: 'Sep 01, 2026', amount: '₹1,53,333', status: 'Paid' },
-                  { id: 'INV-2026-0610', date: 'Aug 01, 2026', amount: '₹1,53,333', status: 'Paid' },
-                ].map((inv) => (
-                  <div
-                    key={inv.id}
-                    className="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low text-xs"
-                  >
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-outline" />
-                      <div>
-                        <span className="font-medium text-on-surface font-data-mono">{inv.id}</span>
-                        <div className="text-[11px] text-on-surface-variant">{inv.date}</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-on-surface font-data-mono">{inv.amount}</div>
-                      <Badge variant="success" size="sm">
-                        {inv.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {activeTab === 'payments' && (
-              <div className="p-4 rounded-xl bg-surface-container-low space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center">
-                      <CreditCard className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-on-surface">
-                        HDFC Bank Corporate Card (•••• 9021)
-                      </div>
-                      <div className="text-xs text-on-surface-variant">
-                        e-Mandate registered • Valid thru 08/29
-                      </div>
-                    </div>
-                  </div>
-                  <Badge variant="success" size="sm">
-                    Verified
-                  </Badge>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'audit' && (
-              <div className="space-y-3 text-xs">
-                <div className="flex items-start gap-2.5">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                  <div>
-                    <span className="font-medium text-on-surface">Contract renewed</span>
-                    <p className="text-on-surface-variant text-[11px]">
-                      Annual agreement renewed by Naveen Kasturia • 2 days ago
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <div className="w-2 h-2 rounded-full bg-tertiary mt-1.5 shrink-0" />
-                  <div>
-                    <span className="font-medium text-on-surface">Payment reconciled</span>
-                    <p className="text-on-surface-variant text-[11px]">
-                      Automated webhook received for ₹1,53,333 • Oct 01, 2026
-                    </p>
                   </div>
                 </div>
               </div>
@@ -717,64 +527,30 @@ export function CustomerManagementPage() {
         </div>
       </div>
 
-      {/* 4. Add Customer Modal */}
+      {/* Add Customer Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Add Customer Portfolio"
-        description="Register a corporate client for subscription billing, invoicing, and contract management."
-        maxWidth="lg"
+        description="Register a corporate client for subscription billing."
       >
         <form onSubmit={handleAddCustomer} className="space-y-4">
           <Input
             label="Company Name"
-            placeholder="e.g. Acme Technologies Private Limited"
+            placeholder="Acme Corp"
             value={newCompanyName}
-            onChange={(e) => setNewCompanyName(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewCompanyName(e.target.value)}
             required
           />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="GSTIN (15 Digits)"
-              placeholder="e.g. 27AABCI1234F1Z5"
-              value={newGstin}
-              onChange={(e) => setNewGstin(e.target.value)}
-            />
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-caps mb-1.5">
-                Client Tier
-              </label>
-              <select
-                value={newTier}
-                onChange={(e) => setNewTier(e.target.value as any)}
-                className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none focus:bg-surface-container-lowest"
-              >
-                <option value="Enterprise">Tier 1: Enterprise</option>
-                <option value="Mid-Market">Tier 2: Mid-Market</option>
-                <option value="Growth">Tier 3: Growth</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Primary Contact Person"
-              placeholder="Full Name"
-              value={newContactName}
-              onChange={(e) => setNewContactName(e.target.value)}
-            />
-            <Input
-              label="Contact Email"
-              type="email"
-              placeholder="billing@company.com"
-              value={newContactEmail}
-              onChange={(e) => setNewContactEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/20">
+          <Input
+            label="Contact Email"
+            type="email"
+            placeholder="billing@acme.com"
+            value={newContactEmail}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewContactEmail(e.target.value)}
+            required
+          />
+          <div className="flex justify-end gap-3 pt-3 border-t">
             <Button variant="outline" size="md" type="button" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
