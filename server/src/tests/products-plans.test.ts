@@ -356,3 +356,4 @@ describe('Phase 2 — Subscription Plan Management Tests', async () => {
     assert.ok(result.items.every((p) => p.billingFrequency === 'MONTHLY'));
   });
 });
+

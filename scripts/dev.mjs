@@ -78,7 +78,7 @@ async function main() {
           if (!alive) {
             fs.unlinkSync(pidFile);
           }
-        } catch {}
+        } catch { }
       }
 
       console.log('\x1b[32m[db]\x1b[0m Starting local Subscriptly PostgreSQL service on port 5433...');
@@ -152,7 +152,7 @@ async function main() {
     for (const proc of processes) {
       try {
         proc.kill();
-      } catch {}
+      } catch { }
     }
     process.exit(0);
   };

@@ -94,3 +94,4 @@ export interface PlansResponse {
     inactiveCount: number;
   };
 }
+

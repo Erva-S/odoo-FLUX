@@ -158,3 +158,4 @@ export async function deleteVariant(req: AuthenticatedRequest, res: Response, ne
     next(err);
   }
 }
+

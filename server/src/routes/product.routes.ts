@@ -21,3 +21,4 @@ router.get('/:productId/variants', productController.listVariants);
 router.post('/:productId/variants', productController.createVariant);
 
 export default router;
+

@@ -12,3 +12,4 @@ router.patch('/:id/status', productController.updateVariantStatus);
 router.delete('/:id', authorizeRoles('ADMIN'), productController.deleteVariant);
 
 export default router;
+

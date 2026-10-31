@@ -57,3 +57,4 @@ export const queryPlanSchema = z.object({
 export type CreatePlanInput = z.infer<typeof createPlanSchema>;
 export type UpdatePlanInput = z.infer<typeof updatePlanSchema>;
 export type QueryPlanInput = z.infer<typeof queryPlanSchema>;
+

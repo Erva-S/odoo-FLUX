@@ -105,3 +105,4 @@ export async function deleteVariant(id: string): Promise<{ message: string }> {
   const response = await api.delete(`/variants/${id}`);
   return response.data;
 }
+

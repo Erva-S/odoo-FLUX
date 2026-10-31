@@ -80,3 +80,4 @@ export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type CreateVariantInput = z.infer<typeof createVariantSchema>;
 export type UpdateVariantInput = z.infer<typeof updateVariantSchema>;
 export type QueryProductInput = z.infer<typeof queryProductSchema>;
+

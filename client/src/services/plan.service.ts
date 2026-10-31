@@ -71,3 +71,4 @@ export async function deletePlan(id: string): Promise<{ message: string }> {
   const response = await api.delete(`/plans/${id}`);
   return response.data;
 }
+

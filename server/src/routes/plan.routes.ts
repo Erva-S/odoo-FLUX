@@ -16,3 +16,4 @@ router.patch('/:id/status', planController.updatePlanStatus);
 router.delete('/:id', authorizeRoles('ADMIN'), planController.deletePlan);
 
 export default router;
+
