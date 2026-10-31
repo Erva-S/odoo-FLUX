@@ -71,6 +71,15 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
   }
 }
 
+export async function syncPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await authService.syncPassword(req.body);
+    return res.status(200).json(result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export async function getMe(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     if (!req.user) {

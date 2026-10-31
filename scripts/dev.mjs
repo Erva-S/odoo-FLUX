@@ -52,7 +52,9 @@ async function main() {
 
   // 2. Start Backend Server
   console.log('\x1b[34m[server]\x1b[0m Starting Subscriptly Express API on port 5000...');
-  const tsxCli = path.join(serverDir, 'node_modules', 'tsx', 'dist', 'cli.mjs');
+  const tsxCli = fs.existsSync(path.join(serverDir, 'node_modules', 'tsx', 'dist', 'cli.mjs'))
+    ? path.join(serverDir, 'node_modules', 'tsx', 'dist', 'cli.mjs')
+    : path.join(rootDir, 'node_modules', 'tsx', 'dist', 'cli.mjs');
   const serverProc = spawn(
     process.execPath,
     [tsxCli, 'watch', 'src/index.ts'],
@@ -69,24 +71,23 @@ async function main() {
   pipeOutput(serverProc.stdout, '[server]', '34');
   pipeOutput(serverProc.stderr, '[server error]', '31');
 
-  // 3. Start Frontend Client (Vite)
-  console.log('\x1b[36m[client]\x1b[0m Starting Subscriptly Vite SPA on port 5173...');
-  const viteCli = path.join(clientDir, 'node_modules', 'vite', 'bin', 'vite.js');
+  // 3. Start Frontend Client (Next.js Modern UI)
+  console.log('\x1b[36m[ui]\x1b[0m Starting Subscriptly Neo-Brutalist Next.js UI on port 3000...');
+  const nextCli = path.join(rootDir, 'node_modules', 'next', 'dist', 'bin', 'next');
   const clientProc = spawn(
     process.execPath,
-    [viteCli],
+    [nextCli, 'dev', '-p', '3000'],
     {
-      cwd: clientDir,
+      cwd: rootDir,
       env: {
         ...process.env,
         NODE_OPTIONS: '--dns-result-order=ipv4first',
-        NODE_DISABLE_COMPILE_CACHE: '1',
       },
     }
   );
   processes.push(clientProc);
-  pipeOutput(clientProc.stdout, '[client]', '36');
-  pipeOutput(clientProc.stderr, '[client error]', '31');
+  pipeOutput(clientProc.stdout, '[ui]', '36');
+  pipeOutput(clientProc.stderr, '[ui log]', '33');
 
   // 4. Graceful teardown
   const shutdown = () => {

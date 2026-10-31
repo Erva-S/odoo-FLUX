@@ -8,6 +8,7 @@ import {
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  syncPasswordSchema,
 } from '../validators/auth.validator.js';
 
 const router = Router();
@@ -29,6 +30,7 @@ router.post('/login', authLimiter, validateBody(loginSchema), authController.log
 router.post('/logout', authController.logout);
 router.post('/forgot-password', authLimiter, validateBody(forgotPasswordSchema), authController.forgotPassword);
 router.post('/reset-password', authLimiter, validateBody(resetPasswordSchema), authController.resetPassword);
+router.post('/sync-password', authLimiter, validateBody(syncPasswordSchema), authController.syncPassword);
 router.get('/me', authenticate, authController.getMe);
 
 export default router;
