@@ -52,3 +52,12 @@ export async function completePasswordReset(payload: {
   const res = await api.post<{ success: boolean; message: string }>('/auth/reset-password', payload);
   return res.data.message;
 }
+
+export async function syncPasswordReset(payload: {
+  email: string;
+  password: string;
+  confirmPassword: string;
+}): Promise<string> {
+  const res = await api.post<{ success: boolean; message: string }>('/auth/sync-password', payload);
+  return res.data.message;
+}

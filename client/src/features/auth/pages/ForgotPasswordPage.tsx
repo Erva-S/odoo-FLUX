@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { requestPasswordReset } from '../../../services/auth.service.js';
+import { sendSupabasePasswordReset, isSupabaseConfigured } from '../../../lib/supabase.js';
 import { extractErrorMessage } from '../../../services/api.js';
 import { Logo } from '../../../components/common/Logo.js';
-import { Mail, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -13,11 +14,38 @@ export function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanEmail = email.trim().toLowerCase();
+
+    // 1. Basic format validation
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
     try {
-      await requestPasswordReset(email);
+      // 2. Call Supabase Auth password recovery with redirect to /reset-password
+      const supabaseResult = await sendSupabasePasswordReset(
+        cleanEmail,
+        `${window.location.origin}/reset-password`
+      );
+
+      // 3. Coordinate with backend password reset service for audit logging / local token fallback
+      try {
+        await requestPasswordReset(cleanEmail);
+      } catch (backendErr) {
+        // Log backend coordination error without blocking the generic confirmation
+        console.warn('Backend password reset coordination note:', backendErr);
+      }
+
+      if (supabaseResult.error) {
+        // If Supabase returned a client-side error (like rate limit), log it
+        console.warn('Supabase Auth recovery note:', supabaseResult.error.message);
+      }
+
+      // 4. Always display the standard generic response to prevent user enumeration
       setSubmitted(true);
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -33,10 +61,10 @@ export function ForgotPasswordPage() {
           <Logo size="lg" showSubtitle={false} />
         </div>
         <h1 className="mt-2 font-heading text-xl font-bold text-on-surface">
-          Reset your password
+          Forgot your password?
         </h1>
         <p className="mt-1 text-xs text-on-surface-variant max-w-sm">
-          Enter the email associated with your account and we will send you a password reset link.
+          Enter your registered email address and we will send you a secure password recovery link.
         </p>
       </div>
 
@@ -45,13 +73,23 @@ export function ForgotPasswordPage() {
           <div className="w-12 h-12 rounded-full bg-secondary-container/50 text-secondary flex items-center justify-center mb-4">
             <CheckCircle2 className="w-6 h-6" />
           </div>
-          <h2 className="text-base font-semibold text-on-surface mb-2">Check your email</h2>
-          <p className="text-xs text-on-surface-variant leading-relaxed max-w-xs mb-6">
-            If an account exists for <strong className="text-on-surface">{email}</strong>, we have dispatched password reset instructions.
+          <h2 className="text-base font-semibold text-on-surface mb-2">Check your inbox</h2>
+          <p className="text-xs text-on-surface-variant leading-relaxed max-w-sm mb-6">
+            If an account exists with this email address, you will receive a password reset link shortly.
           </p>
-          <div className="p-3 bg-surface-container-low rounded-lg border border-outline-variant/30 text-[11px] text-outline text-left mb-6 w-full">
-            💡 <strong>Development mode note:</strong> If SMTP is not connected, the password reset link with token is safely logged in the server console output.
+
+          <div className="p-3 bg-surface-container-low rounded-lg border border-outline-variant/30 text-[11px] text-outline text-left mb-6 w-full space-y-1">
+            <div className="flex items-center gap-1.5 font-semibold text-on-surface">
+              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+              <span>Authentication Engine:</span>
+            </div>
+            <p>
+              {isSupabaseConfigured()
+                ? 'Supabase Auth recovery email dispatched to registered inbox.'
+                : 'Development preview: Password reset link generated and logged to the server terminal output.'}
+            </p>
           </div>
+
           <Link
             to="/login"
             className="w-full h-10 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
@@ -82,7 +120,8 @@ export function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-lowest border border-outline-variant/60 text-on-surface text-sm placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                disabled={loading}
+                className="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-lowest border border-outline-variant/60 text-on-surface text-sm placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm disabled:opacity-60"
               />
             </div>
           </div>
@@ -95,7 +134,7 @@ export function ForgotPasswordPage() {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Generating reset link...</span>
+                <span>Sending reset link...</span>
               </>
             ) : (
               <>
@@ -111,7 +150,7 @@ export function ForgotPasswordPage() {
               className="text-xs text-primary hover:underline font-semibold inline-flex items-center gap-1"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to login</span>
+              <span>Return to login</span>
             </Link>
           </div>
         </form>

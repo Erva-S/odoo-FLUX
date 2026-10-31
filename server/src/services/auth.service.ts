@@ -214,3 +214,36 @@ export async function resetPassword(input: ResetPasswordInput) {
     message: 'Your password has been successfully reset. You can now log in with your new password.',
   };
 }
+
+export async function syncPassword(input: { email: string; password: string }) {
+  const user = await prisma.user.findUnique({
+    where: { email: input.email },
+  });
+
+  if (!user) {
+    return {
+      success: true,
+      message: 'Password successfully updated.',
+    };
+  }
+
+  const newPasswordHash = await hashPassword(input.password);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash: newPasswordHash },
+  });
+
+  await createAuditLog({
+    userId: user.id,
+    action: 'PASSWORD_RESET_SYNC_COMPLETED',
+    entityType: 'User',
+    entityId: user.id,
+    metadata: { source: 'SUPABASE_AUTH_RECOVERY' },
+  });
+
+  return {
+    success: true,
+    message: 'Password successfully updated.',
+  };
+}

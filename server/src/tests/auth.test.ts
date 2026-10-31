@@ -136,6 +136,62 @@ describe('Authentication & User Lifecycle Tests', () => {
     });
   });
 
+  test('9. Can successfully reset password with valid token and strong new password', async () => {
+    // Generate fresh reset token
+    const rawToken = 'test-recovery-token-xyz-1234567890';
+    const { hashToken } = await import('../utils/token.js');
+    const tokenHash = hashToken(rawToken);
+
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: customerUserId,
+        tokenHash,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 30),
+      },
+    });
+
+    const resetRes = await authService.resetPassword({
+      token: rawToken,
+      password: 'BrandNewPassword123#',
+      confirmPassword: 'BrandNewPassword123#',
+    });
+
+    assert.equal(resetRes.success, true);
+
+    // Verify user can log in with new password
+    const loginRes = await authService.login({
+      email: testCustomerEmail,
+      password: 'BrandNewPassword123#',
+    });
+    assert.ok(loginRes.token);
+
+    // Verify old password fails
+    await assert.rejects(async () => {
+      await authService.login({
+        email: testCustomerEmail,
+        password: 'StrongPassword123!',
+      });
+    }, {
+      message: 'Invalid email or password.',
+    });
+  });
+
+  test('10. Can sync password updated via Supabase Auth recovery session', async () => {
+    const syncRes = await authService.syncPassword({
+      email: testCustomerEmail,
+      password: 'SupabaseSyncedPass456$',
+    });
+
+    assert.equal(syncRes.success, true);
+
+    // Verify login with newly synced password
+    const loginRes = await authService.login({
+      email: testCustomerEmail,
+      password: 'SupabaseSyncedPass456$',
+    });
+    assert.ok(loginRes.token);
+  });
+
   after(async () => {
     // Clean up test user
     if (customerUserId) {
