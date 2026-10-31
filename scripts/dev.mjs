@@ -44,43 +44,10 @@ async function main() {
   const processes = [];
 
   // 1. Check / Start PostgreSQL
-  const is5433Open = await isPortOpen(5433);
-  const is5432Open = await isPortOpen(5432);
-
-  if (is5433Open || is5432Open) {
-    const activePort = is5433Open ? 5433 : 5432;
-    console.log(`\x1b[32m[db]\x1b[0m PostgreSQL is listening on port ${activePort}`);
-  } else {
-    // Attempt to start local postgres cluster if present on Windows
-    const localAppData = process.env.LOCALAPPDATA || '';
-    const pgDataDir = path.join(localAppData, 'subscriptly_db');
-    const pgExe = 'C:\\Program Files\\PostgreSQL\\18\\bin\\postgres.exe';
-
-    if (fs.existsSync(pgDataDir) && fs.existsSync(pgExe)) {
-      console.log('\x1b[32m[db]\x1b[0m Starting local PostgreSQL service on port 5433...');
-      const pgProc = spawn(pgExe, ['-D', pgDataDir, '-p', '5433'], {
-        stdio: 'ignore',
-        detached: false,
-      });
-      processes.push(pgProc);
-
-      // Wait a moment for startup
-      let ready = false;
-      for (let i = 0; i < 10; i++) {
-        await new Promise((r) => setTimeout(r, 500));
-        if (await isPortOpen(5433)) {
-          ready = true;
-          break;
-        }
-      }
-      if (ready) {
-        console.log('\x1b[32m[db]\x1b[0m Local PostgreSQL ready on port 5433.');
-      } else {
-        console.warn('\x1b[33m[db]\x1b[0m PostgreSQL starting in background.');
-      }
-    } else {
-      console.log('\x1b[33m[db]\x1b[0m External PostgreSQL expected on configured DATABASE_URL.');
-    }
+  const dbPort = getDatabasePort();
+  const pgProc = await ensurePostgresRunning(dbPort);
+  if (pgProc) {
+    processes.push(pgProc);
   }
 
   // 2. Start Backend Server
