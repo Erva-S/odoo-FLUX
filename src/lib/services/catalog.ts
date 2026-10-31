@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { Product, ProductVariant, Plan } from "@/lib/data/types";
+import { Product, ProductVariant, Plan, Discount, Tax } from "@/lib/data/types";
 
 export interface VariantInput {
   id?: string;
@@ -365,3 +365,70 @@ export async function deleteProductService(id: string): Promise<ServiceResult<{ 
   }
 }
 
+/**
+ * Fetch all discounts from Supabase PostgreSQL.
+ */
+export async function getDiscountsService(): Promise<ServiceResult<Discount[]>> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await (supabase as any)
+      .from("discounts")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    const discounts: Discount[] = (data || []).map((d: any) => ({
+      id: d.id,
+      code: d.code,
+      name: d.name,
+      type: d.type,
+      value: Number(d.value),
+      minPurchase: Number(d.min_purchase || 0),
+      minQuantity: d.min_quantity || 1,
+      usageLimit: d.usage_limit || undefined,
+      timesUsed: d.times_used || 0,
+      appliesTo: d.applies_to || "whole_subscription",
+      productId: d.product_id || undefined,
+      isActive: d.is_active ?? true,
+      startDate: d.start_date || undefined,
+      endDate: d.end_date || undefined,
+    }));
+
+    return { success: true, data: discounts };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to fetch discounts from database";
+    return { success: false, error: message };
+  }
+}
+
+/**
+ * Fetch all taxes from Supabase PostgreSQL.
+ */
+export async function getTaxesService(): Promise<ServiceResult<Tax[]>> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await (supabase as any)
+      .from("taxes")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    const taxes: Tax[] = (data || []).map((t: any) => ({
+      id: t.id,
+      name: t.name,
+      rate: Number(t.rate),
+      isActive: t.is_active ?? true,
+    }));
+
+    return { success: true, data: taxes };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to fetch taxes from database";
+    return { success: false, error: message };
+  }
+}

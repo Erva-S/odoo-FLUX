@@ -21,6 +21,7 @@ import {
   ChevronDown,
   UserCheck,
   ShieldAlert,
+  BarChart3,
 } from "lucide-react";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { NeoBadge } from "@/components/ui/NeoBadge";
@@ -42,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Customers", href: "/customers", icon: Users },
   { label: "Catalog", href: "/catalog", icon: Box, adminOnly: true },
   { label: "Discounts", href: "/discounts", icon: Percent, adminOnly: true },
+  { label: "Reports", href: "/reports", icon: BarChart3 },
   { label: "Settings", href: "/settings", icon: Settings, adminOnly: true },
 ];
 

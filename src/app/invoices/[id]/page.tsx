@@ -1,17 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { NeoCard } from "@/components/ui/NeoCard";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { NeoBadge } from "@/components/ui/NeoBadge";
 import { NeoInput } from "@/components/ui/NeoInput";
-import { MockupWindow } from "@/components/ui/MockupWindow";
-import { dataStore } from "@/lib/data/store";
 import { Invoice, Payment } from "@/lib/data/types";
 import { useToast } from "@/components/ui/ToastContext";
+import { fetchInvoiceByIdAction, updateInvoiceStatusAction } from "@/app/actions/invoices";
+import { recordPaymentAction } from "@/app/actions/payments";
 import {
   ArrowLeft,
   Printer,
@@ -19,29 +18,57 @@ import {
   CheckCircle2,
   XCircle,
   CreditCard,
-  Building,
-  Mail,
-  Calendar,
-  DollarSign,
+  Loader2,
 } from "lucide-react";
 
 export default function InvoiceDetailPage() {
   const params = useParams();
   const invId = params?.id as string;
-  const { success, toast } = useToast();
+  const { success, error: toastError } = useToast();
 
-  const [invoice, setInvoice] = useState<Invoice | undefined>(() => {
-    return dataStore.invoices.find((i) => i.id === invId || i.invoiceNumber === invId);
-  });
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<Payment["method"]>("bank_transfer");
+  const [paymentNote, setPaymentNote] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  const loadInvoice = useCallback(async () => {
+    if (!invId) return;
+    setLoading(true);
+    try {
+      const data = await fetchInvoiceByIdAction(invId);
+      setInvoice(data);
+    } catch (err) {
+      console.error("Error loading invoice:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [invId]);
+
+  useEffect(() => {
+    loadInvoice();
+  }, [loadInvoice]);
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="py-24 text-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-black" />
+          <p className="font-mono text-sm font-bold text-neutral-700">Loading invoice details from PostgreSQL...</p>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (!invoice) {
     return (
       <AppShell>
         <div className="py-20 text-center space-y-4">
           <h2 className="text-2xl font-heading font-black">Invoice Not Found</h2>
+          <p className="text-sm text-neutral-600">The requested invoice ID or number does not exist in PostgreSQL.</p>
           <Link href="/invoices">
             <NeoButton variant="primary">Return to Invoices</NeoButton>
           </Link>
@@ -51,18 +78,28 @@ export default function InvoiceDetailPage() {
   }
 
   // Invoice Status Transitions
-  const handleConfirm = () => {
-    invoice.status = "confirmed";
-    invoice.updatedAt = new Date().toISOString();
-    setInvoice({ ...invoice });
-    success("Invoice confirmed");
+  const handleConfirm = async () => {
+    setSubmitting(true);
+    const res = await updateInvoiceStatusAction(invoice.id, "confirmed");
+    setSubmitting(false);
+    if (res.success && res.invoice) {
+      setInvoice(res.invoice);
+      success("Invoice confirmed in PostgreSQL");
+    } else {
+      toastError(res.error || "Failed to confirm invoice");
+    }
   };
 
-  const handleCancel = () => {
-    invoice.status = "cancelled";
-    invoice.updatedAt = new Date().toISOString();
-    setInvoice({ ...invoice });
-    success("Invoice cancelled");
+  const handleCancel = async () => {
+    setSubmitting(true);
+    const res = await updateInvoiceStatusAction(invoice.id, "cancelled");
+    setSubmitting(false);
+    if (res.success && res.invoice) {
+      setInvoice(res.invoice);
+      success("Invoice cancelled in PostgreSQL");
+    } else {
+      toastError(res.error || "Failed to cancel invoice");
+    }
   };
 
   const handleSend = () => {
@@ -73,30 +110,39 @@ export default function InvoiceDetailPage() {
     window.print();
   };
 
-  const handleRecordPayment = (e: React.FormEvent) => {
+  const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountNum = parseFloat(paymentAmount);
     if (isNaN(amountNum) || amountNum <= 0) return;
 
-    const res = dataStore.recordPayment({
+    setSubmitting(true);
+    const res = await recordPaymentAction({
       invoiceId: invoice.id,
       amount: amountNum,
-      method: "bank_transfer",
+      method: paymentMethod,
+      note: paymentNote || undefined,
     });
+    setSubmitting(false);
 
-    setInvoice({ ...res.invoice });
-    setShowPaymentModal(false);
-    setPaymentAmount("");
-    success(`Payment of $${amountNum.toFixed(2)} recorded on ${invoice.invoiceNumber}`);
+    if (res.success) {
+      setShowPaymentModal(false);
+      setPaymentAmount("");
+      setPaymentNote("");
+      success(`Payment of $${amountNum.toFixed(2)} recorded on ${invoice.invoiceNumber}`);
+      await loadInvoice();
+    } else {
+      toastError(res.error || "Failed to record payment");
+    }
   };
 
-  const isPastDue = new Date(invoice.dueDate) < new Date() && invoice.status !== "paid";
+  const remaining = Math.max(0, invoice.totalAmount - invoice.amountPaid);
+  const isPastDue = invoice.isOverdue;
 
   return (
     <AppShell>
       <div className="space-y-6 max-w-5xl mx-auto">
         {/* Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-black pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-black pb-4 print:hidden">
           <div className="flex items-center gap-3">
             <Link
               href="/invoices"
@@ -126,7 +172,7 @@ export default function InvoiceDetailPage() {
               onClick={handlePrint}
               icon={<Printer className="w-4 h-4" />}
             >
-              Print
+              Print / Save PDF
             </NeoButton>
 
             <NeoButton
@@ -142,6 +188,7 @@ export default function InvoiceDetailPage() {
               <NeoButton
                 variant="primary"
                 size="compact"
+                disabled={submitting}
                 onClick={handleConfirm}
                 icon={<CheckCircle2 className="w-4 h-4" />}
               >
@@ -154,8 +201,9 @@ export default function InvoiceDetailPage() {
                 <NeoButton
                   variant="primary"
                   size="compact"
+                  disabled={submitting || remaining <= 0}
                   onClick={() => {
-                    setPaymentAmount(String(invoice.totalAmount - invoice.amountPaid));
+                    setPaymentAmount(remaining.toFixed(2));
                     setShowPaymentModal(true);
                   }}
                   icon={<CreditCard className="w-4 h-4" />}
@@ -166,6 +214,7 @@ export default function InvoiceDetailPage() {
                 <NeoButton
                   variant="destructive"
                   size="compact"
+                  disabled={submitting}
                   onClick={handleCancel}
                   icon={<XCircle className="w-4 h-4" />}
                 >
@@ -177,7 +226,7 @@ export default function InvoiceDetailPage() {
         </div>
 
         {/* Printable Invoice Container */}
-        <div className="bg-white border-2 border-black rounded-[14px] p-8 shadow-neo-lg space-y-8 print:border-none print:shadow-none">
+        <div className="bg-white border-2 border-black rounded-[14px] p-8 shadow-neo-lg space-y-8 print:border-none print:shadow-none print:p-0">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b-2 border-black pb-6">
             <div>
@@ -287,7 +336,7 @@ export default function InvoiceDetailPage() {
             <div className="w-full sm:w-72 flex justify-between border-t-2 border-black pt-2 text-base font-extrabold text-black">
               <span>Outstanding Balance:</span>
               <span className="font-mono font-black">
-                ${(invoice.totalAmount - invoice.amountPaid).toFixed(2)}
+                ${remaining.toFixed(2)}
               </span>
             </div>
           </div>
@@ -298,29 +347,60 @@ export default function InvoiceDetailPage() {
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div className="bg-white border-2 border-black rounded-[16px] shadow-neo-xl max-w-md w-full p-6 space-y-6">
-            <h3 className="text-2xl font-heading font-black">Record Payment</h3>
+            <div>
+              <h3 className="text-2xl font-heading font-black">Record Payment</h3>
+              <p className="text-xs font-mono text-neutral-600 mt-1">
+                Invoice {invoice.invoiceNumber} | Balance: ${remaining.toFixed(2)}
+              </p>
+            </div>
             <form onSubmit={handleRecordPayment} className="space-y-4">
               <NeoInput
                 label="Payment Amount ($)"
                 type="number"
                 step="0.01"
                 min="0.01"
-                max={invoice.totalAmount - invoice.amountPaid}
+                max={remaining}
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(e.target.value)}
                 required
               />
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-neutral-800 uppercase tracking-wide">
+                  Payment Method
+                </label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value as Payment["method"])}
+                  className="w-full bg-neoCanvas border-2 border-black rounded-[8px] p-2.5 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-black"
+                >
+                  <option value="bank_transfer">Bank Wire Transfer</option>
+                  <option value="credit_card">Corporate Credit Card</option>
+                  <option value="wire">ACH / Wire Settlement</option>
+                  <option value="ach">Direct Debit ACH</option>
+                </select>
+              </div>
+
+              <NeoInput
+                label="Transaction Reference / Note (Optional)"
+                type="text"
+                placeholder="e.g. Wire confirmation ref #82931"
+                value={paymentNote}
+                onChange={(e) => setPaymentNote(e.target.value)}
+              />
+
               <div className="flex justify-end gap-3 pt-4 border-t-2 border-neoDivider">
                 <NeoButton
                   type="button"
                   variant="secondary"
                   size="compact"
+                  disabled={submitting}
                   onClick={() => setShowPaymentModal(false)}
                 >
                   Cancel
                 </NeoButton>
-                <NeoButton type="submit" variant="primary" size="compact">
-                  Confirm Payment
+                <NeoButton type="submit" variant="primary" size="compact" disabled={submitting}>
+                  {submitting ? "Processing..." : "Confirm Payment"}
                 </NeoButton>
               </div>
             </form>
@@ -330,4 +410,3 @@ export default function InvoiceDetailPage() {
     </AppShell>
   );
 }
-

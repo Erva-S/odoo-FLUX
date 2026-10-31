@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import {
   getProductsService,
   getPlansService,
+  getDiscountsService,
+  getTaxesService,
   createProductService,
   updateProductService,
   deleteProductService,
@@ -16,6 +18,14 @@ export async function getProductsAction() {
 
 export async function getPlansAction() {
   return await getPlansService();
+}
+
+export async function getDiscountsAction() {
+  return await getDiscountsService();
+}
+
+export async function getTaxesAction() {
+  return await getTaxesService();
 }
 
 export async function createProductAction(input: ProductInput) {

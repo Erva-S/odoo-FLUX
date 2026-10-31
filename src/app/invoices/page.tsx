@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState, useMemo, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { NeoTable } from "@/components/ui/NeoTable";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { NeoBadge } from "@/components/ui/NeoBadge";
-import { dataStore } from "@/lib/data/store";
 import { Invoice } from "@/lib/data/types";
-import { FileText, Search, Plus, ArrowRight, Printer, AlertCircle } from "lucide-react";
+import { fetchInvoicesAction } from "@/app/actions/invoices";
+import { FileText, Search, ArrowRight, Loader2, RefreshCw } from "lucide-react";
 
 function InvoicesContent() {
   const searchParams = useSearchParams();
@@ -18,33 +18,34 @@ function InvoicesContent() {
   const [searchTerm, setSearchTerm] = useState(initialSub);
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const pageSize = 15;
 
-  const filteredInvoices = useMemo(() => {
-    const now = new Date();
-    return dataStore.invoices.filter((inv) => {
-      const matchesSearch =
-        inv.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inv.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inv.subscriptionNumber.toLowerCase().includes(searchTerm.toLowerCase());
+  const loadInvoices = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetchInvoicesAction({
+        status: statusFilter,
+        search: searchTerm,
+        page,
+        pageSize,
+      });
+      setInvoices(res.invoices);
+      setTotalCount(res.totalCount);
+      setTotalPages(res.totalPages);
+    } catch (err) {
+      console.error("Failed to load invoices from PostgreSQL:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, searchTerm, page, pageSize]);
 
-      const isOverdue = new Date(inv.dueDate) < now && inv.status !== "paid";
-      let matchesStatus = true;
-      if (statusFilter === "overdue") {
-        matchesStatus = isOverdue;
-      } else if (statusFilter !== "all") {
-        matchesStatus = inv.status.toLowerCase() === statusFilter.toLowerCase();
-      }
-
-      return matchesSearch && matchesStatus;
-    });
-  }, [searchTerm, statusFilter]);
-
-  const totalPages = Math.ceil(filteredInvoices.length / pageSize) || 1;
-  const paginatedData = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredInvoices.slice(start, start + pageSize);
-  }, [filteredInvoices, page]);
+  useEffect(() => {
+    loadInvoices();
+  }, [loadInvoices]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -59,6 +60,13 @@ function InvoicesContent() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => loadInvoices()}
+            className="p-2 border-2 border-black rounded-[8px] bg-white shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5"
+            title="Refresh database"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
           <Link href="/invoices/generate">
             <NeoButton variant="primary" size="compact" icon={<FileText className="w-4 h-4" />}>
               Run Automated Billing
@@ -106,99 +114,115 @@ function InvoicesContent() {
         </div>
 
         <div className="text-xs font-mono font-bold text-neutral-600 bg-neoCanvas px-3 py-1.5 rounded-[6px] border border-black/30">
-          {filteredInvoices.length} INVOICES FOUND
+          {totalCount} INVOICES FOUND
         </div>
       </div>
 
       {/* Invoices Table */}
-      <NeoTable
-        columns={[
-          {
-            header: "Invoice #",
-            accessorKey: "invoiceNumber",
-            render: (inv) => (
-              <Link
-                href={`/invoices/${inv.id}`}
-                className="font-mono font-bold underline hover:text-neutral-700"
-              >
-                {inv.invoiceNumber}
-              </Link>
-            ),
-          },
-          {
-            header: "Customer",
-            accessorKey: "customerName",
-            render: (inv) => (
-              <div>
-                <span className="font-bold block">{inv.customerName}</span>
-                <span className="text-[11px] text-neutral-600">{inv.customerEmail}</span>
-              </div>
-            ),
-          },
-          {
-            header: "Subscription",
-            accessorKey: "subscriptionNumber",
-            render: (inv) => (
-              <Link
-                href={`/subscriptions/${inv.subscriptionId}`}
-                className="font-mono text-xs hover:underline text-neutral-800"
-              >
-                {inv.subscriptionNumber}
-              </Link>
-            ),
-          },
-          {
-            header: "Due Date",
-            accessorKey: "dueDate",
-            render: (inv) => {
-              const isPast = new Date(inv.dueDate) < new Date() && inv.status !== "paid";
-              return (
-                <span className={`font-mono text-xs ${isPast ? "font-bold text-statusRed" : "text-neutral-700"}`}>
-                  {inv.dueDate} {isPast && "(!)"}
+      {loading ? (
+        <div className="bg-white border-2 border-black rounded-[12px] p-12 text-center shadow-neo">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-black mb-3" />
+          <p className="font-mono text-sm font-bold text-neutral-700">Loading invoices from PostgreSQL...</p>
+        </div>
+      ) : (
+        <NeoTable
+          columns={[
+            {
+              header: "Invoice #",
+              accessorKey: "invoiceNumber",
+              render: (inv) => (
+                <Link
+                  href={`/invoices/${inv.id}`}
+                  className="font-mono font-bold underline hover:text-neutral-700"
+                >
+                  {inv.invoiceNumber}
+                </Link>
+              ),
+            },
+            {
+              header: "Customer",
+              accessorKey: "customerName",
+              render: (inv) => (
+                <div>
+                  <span className="font-bold block">{inv.customerName}</span>
+                  <span className="text-[11px] text-neutral-600">{inv.customerEmail}</span>
+                </div>
+              ),
+            },
+            {
+              header: "Subscription",
+              accessorKey: "subscriptionNumber",
+              render: (inv) => (
+                <Link
+                  href={`/subscriptions/${inv.subscriptionId}`}
+                  className="font-mono text-xs hover:underline text-neutral-800"
+                >
+                  {inv.subscriptionNumber}
+                </Link>
+              ),
+            },
+            {
+              header: "Due Date",
+              accessorKey: "dueDate",
+              render: (inv) => {
+                const isPast = inv.isOverdue;
+                return (
+                  <span className={`font-mono text-xs ${isPast ? "font-bold text-statusRed" : "text-neutral-700"}`}>
+                    {inv.dueDate} {isPast && "(!)"}
+                  </span>
+                );
+              },
+            },
+            {
+              header: "Total",
+              accessorKey: "totalAmount",
+              align: "right",
+              render: (inv) => (
+                <span className="font-bold font-mono">
+                  ${inv.totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </span>
-              );
+              ),
             },
-          },
-          {
-            header: "Total",
-            accessorKey: "totalAmount",
-            align: "right",
-            render: (inv) => (
-              <span className="font-bold font-mono">
-                ${inv.totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-              </span>
-            ),
-          },
-          {
-            header: "Status",
-            render: (inv) => {
-              const isPast = new Date(inv.dueDate) < new Date() && inv.status !== "paid";
-              return <NeoBadge status={isPast ? "overdue" : inv.status} />;
+            {
+              header: "Paid",
+              accessorKey: "amountPaid",
+              align: "right",
+              render: (inv) => (
+                <span className="font-mono text-xs text-neutral-700">
+                  ${inv.amountPaid.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </span>
+              ),
             },
-          },
-          {
-            header: "Action",
-            align: "right",
-            render: (inv) => (
-              <Link href={`/invoices/${inv.id}`}>
-                <NeoButton size="compact" variant="secondary" icon={<ArrowRight className="w-3.5 h-3.5" />}>
-                  View
-                </NeoButton>
+            {
+              header: "Status",
+              render: (inv) => {
+                return <NeoBadge status={inv.isOverdue ? "overdue" : inv.status} />;
+              },
+            },
+            {
+              header: "Action",
+              align: "right",
+              render: (inv) => (
+                <Link href={`/invoices/${inv.id}`}>
+                  <NeoButton size="compact" variant="secondary" icon={<ArrowRight className="w-3.5 h-3.5" />}>
+                    View
+                  </NeoButton>
+                </Link>
+              ),
+            },
+          ]}
+          data={invoices}
+          keyExtractor={(inv) => inv.id}
+          emptyState={
+            <div className="py-12 text-center space-y-4">
+              <p className="text-base font-bold text-neutral-700">No invoices match your query.</p>
+              <Link href="/invoices/generate">
+                <NeoButton variant="primary">Generate from active subscriptions</NeoButton>
               </Link>
-            ),
-          },
-        ]}
-        data={paginatedData}
-        keyExtractor={(inv) => inv.id}
-        emptyState={
-          <div className="py-12 text-center space-y-4">
-            <p className="text-base font-bold text-neutral-700">No invoices match your query.</p>
-            <Link href="/invoices/generate">
-              <NeoButton variant="primary">Generate from active subscriptions</NeoButton>
-            </Link>
-          </div>
-        }
-      />
+            </div>
+          }
+        />
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -211,7 +235,7 @@ function InvoicesContent() {
               size="compact"
               variant="secondary"
               disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
             >
               Previous
             </NeoButton>
@@ -219,7 +243,7 @@ function InvoicesContent() {
               size="compact"
               variant="secondary"
               disabled={page >= totalPages}
-              onClick={() => setPage(page + 1)}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             >
               Next
             </NeoButton>
