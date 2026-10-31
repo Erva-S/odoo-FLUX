@@ -4,13 +4,14 @@ import { useAuth } from '../../../context/AuthContext.js';
 import { supabase, isSupabaseConfigured } from '../../../lib/supabase.js';
 import { extractErrorMessage } from '../../../services/api.js';
 import { Logo } from '../../../components/common/Logo.js';
-import { User, Mail, Lock, Eye, EyeOff, Check, X, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { User, Building2, Mail, Lock, Eye, EyeOff, Check, X, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 
 export function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
+  const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -49,7 +50,10 @@ export function RegisterPage() {
             email: email.trim().toLowerCase(),
             password,
             options: {
-              data: { name: name.trim() },
+              data: {
+                name: name.trim(),
+                business_name: businessName.trim() || undefined,
+              },
             },
           });
           if (supaErr && !supaErr.message.includes('User already registered')) {
@@ -63,6 +67,7 @@ export function RegisterPage() {
       // 2. Register in application PostgreSQL database via backend API
       await register({
         name,
+        businessName: businessName.trim() || undefined,
         email,
         password,
         confirmPassword,
@@ -114,6 +119,23 @@ export function RegisterPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Rahul Verma"
+              className="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-lowest border border-outline-variant/60 text-on-surface text-sm placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-on-surface font-medium" htmlFor="businessName">
+            Business Name
+          </label>
+          <div className="relative">
+            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-4 h-4" />
+            <input
+              id="businessName"
+              type="text"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              placeholder="e.g. Acme Studio"
               className="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-lowest border border-outline-variant/60 text-on-surface text-sm placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             />
           </div>
