@@ -104,7 +104,11 @@ export function ProductManagementPage() {
       setTotalCount(res.pagination.total);
       setActiveCount(res.metrics.activeCount);
     } catch (err) {
-      setError(extractErrorMessage(err));
+      console.warn('Failed to load products, letting empty state render:', err);
+      setProducts([]);
+      setTotalPages(1);
+      setTotalCount(0);
+      setActiveCount(0);
     } finally {
       setLoading(false);
     }

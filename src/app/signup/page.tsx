@@ -36,42 +36,11 @@ export default function SignupPage() {
       return;
     }
 
-<<<<<<< HEAD
-    setLoading(true);
-=======
-    const res = await signup({ email, password, name, companyName });
-    if (!res.success) {
-      error(res.error || "Failed to create account.");
-      return;
-    }
->>>>>>> main
-
     try {
-      // 1. Supabase Auth registration
-      try {
-        const supabase = createClient();
-        const { error: supaErr } = await supabase.auth.signUp({
-          email: email.trim().toLowerCase(),
-          password,
-          options: {
-            data: {
-              name: name.trim(),
-              company_name: companyName.trim(),
-            },
-          },
-        });
-        if (supaErr && !supaErr.message.includes("User already registered")) {
-          console.warn("Supabase signup:", supaErr.message);
-        }
-      } catch (supaErr) {
-        console.warn("Supabase client init:", supaErr);
-      }
-
-      // 2. Local application account creation
-      const res = signup({ email, name, companyName });
+      setLoading(true);
+      const res = await signup({ email, password, name, companyName });
       if (!res.success) {
         error(res.error || "Failed to create account.");
-        setLoading(false);
         return;
       }
 

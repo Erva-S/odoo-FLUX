@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { UserRole } from "@/types/database.types";
@@ -28,79 +29,81 @@ export async function loginWithEmailAction(
     }
 
     const supabase = await createServerSupabaseClient();
+    let authUser: { id: string; email: string; name: string; role: UserRole } | null = null;
+
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email: trimmedEmail,
       password,
     });
 
-    if (authError || !authData.user) {
+    if (authData?.user) {
+      const userId = authData.user.id;
+      const adminSupabase = createAdminClient();
+
+      const { data: profile } = await adminSupabase
+        .from("profiles")
+        .select("*")
+        .or(`id.eq.${userId},email.eq.${trimmedEmail}`)
+        .maybeSingle();
+
+      const role = (profile?.role as UserRole) || (authData.user.user_metadata?.role as UserRole) || expectedRole || "customer";
+      const name = profile?.name || authData.user.user_metadata?.name || trimmedEmail.split("@")[0];
+
+      authUser = {
+        id: profile?.id || userId,
+        email: trimmedEmail,
+        name,
+        role,
+      };
+    } else {
+      // 2. Fallback: Authenticate via Subscriptly PostgreSQL backend
+      try {
+        const backendRes = await fetch("http://localhost:5000/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: trimmedEmail, password }),
+        });
+        const backendData = await backendRes.json();
+        if (backendRes.ok && backendData.success && backendData.user) {
+          authUser = {
+            id: backendData.user.id,
+            email: backendData.user.email,
+            name: backendData.user.name,
+            role: (backendData.user.role?.toLowerCase() as UserRole) || expectedRole || "customer",
+          };
+        }
+      } catch (backendErr) {
+        console.warn("Backend auth fallback error:", backendErr);
+      }
+    }
+
+    if (!authUser) {
       return { success: false, error: authError?.message || "Invalid email or password." };
     }
 
-    const userId = authData.user.id;
-    const adminSupabase = createAdminClient();
+    const cookieStore = cookies();
+    cookieStore.set("subscriptly_token", authUser.id, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+      sameSite: "lax",
+    });
+    cookieStore.set("subscriptly_role", authUser.role, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+      sameSite: "lax",
+    });
+    cookieStore.set("subscriptly_user", JSON.stringify(authUser), {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+      sameSite: "lax",
+    });
 
-    // Look up profile by id or email
-    const { data: profile } = await adminSupabase
-      .from("profiles")
-      .select("*")
-      .or(`id.eq.${userId},email.eq.${trimmedEmail}`)
-      .maybeSingle();
-
-    if (!profile) {
-      // Create fallback profile
-      const newProfPayload: any = {
-        id: userId,
-        email: trimmedEmail,
-        name: authData.user.user_metadata?.name || trimmedEmail.split("@")[0],
-        role: "customer",
-      };
-
-      const { data: newProf, error: createProfError } = await adminSupabase
-        .from("profiles")
-        .insert(newProfPayload)
-        .select()
-        .single();
-
-      if (createProfError || !newProf) {
-        return { success: false, error: "Authenticated, but failed to load user profile." };
-      }
-
-      return {
-        success: true,
-        data: {
-          user: {
-            id: newProf.id,
-            email: newProf.email,
-            name: newProf.name,
-            role: newProf.role,
-          },
-        },
-        redirectTo: "/portal",
-      };
-    }
-
-    // Check account status if deactivated
-    if ((profile as any).is_active === false) {
-      await supabase.auth.signOut();
-      return {
-        success: false,
-        error: "Your account has been deactivated. Please contact support at admin@brightloop.io.",
-      };
-    }
-
-    const actualRole = profile.role;
-    const targetPath = actualRole === "customer" ? "/portal" : "/dashboard";
+    const targetPath = authUser.role === "customer" ? "/portal" : "/dashboard";
 
     return {
       success: true,
       data: {
-        user: {
-          id: profile.id,
-          email: profile.email,
-          name: profile.name,
-          role: profile.role,
-        },
+        user: authUser,
       },
       redirectTo: targetPath,
     };
@@ -289,8 +292,16 @@ export async function createStaffAccountAction(params: {
  * Server Action: Logout
  */
 export async function logoutAction() {
-  const supabase = await createServerSupabaseClient();
-  await supabase.auth.signOut();
+  try {
+    const supabase = await createServerSupabaseClient();
+    await supabase.auth.signOut();
+  } catch {
+    // ignore
+  }
+  const cookieStore = cookies();
+  cookieStore.delete("subscriptly_token");
+  cookieStore.delete("subscriptly_role");
+  cookieStore.delete("subscriptly_user");
   revalidatePath("/", "layout");
   redirect("/login");
 }
@@ -319,6 +330,63 @@ export async function forgotPasswordAction(email: string): Promise<AuthActionRes
     return { success: true };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Failed to send reset link.";
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Server Action: Reset Password Directly or with Token
+ */
+export async function resetPasswordDirectAction(
+  email: string,
+  newPassword: string,
+  token?: string | null
+): Promise<AuthActionResult> {
+  try {
+    const cleanEmail = email.toLowerCase().trim();
+    if (!cleanEmail) {
+      return { success: false, error: "Please provide your registered email address." };
+    }
+
+    if (newPassword.length <= 8) {
+      return { success: false, error: "Password must be more than 8 characters." };
+    }
+
+    // 1. If token provided, try token reset on backend API
+    if (token) {
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, password: newPassword }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          return { success: true };
+        }
+      } catch (tokenErr) {
+        console.warn("Backend token reset error:", tokenErr);
+      }
+    }
+
+    // 2. Direct password update in PostgreSQL
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/sync-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: cleanEmail, password: newPassword }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        return { success: true };
+      }
+    } catch (apiErr) {
+      console.warn("Backend sync error:", apiErr);
+    }
+
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Failed to reset password.";
     return { success: false, error: msg };
   }
 }

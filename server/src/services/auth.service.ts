@@ -115,7 +115,7 @@ export async function login(input: LoginInput) {
   return { user: safeUser, token };
 }
 
-export async function forgotPassword(email: string) {
+export async function forgotPassword(email: string, baseUrl?: string) {
   const user = await prisma.user.findUnique({
     where: { email },
   });
@@ -142,7 +142,7 @@ export async function forgotPassword(email: string) {
     },
   });
 
-  await sendPasswordResetEmail(user.email, rawToken);
+  await sendPasswordResetEmail(user.email, rawToken, baseUrl);
 
   await createAuditLog({
     userId: user.id,

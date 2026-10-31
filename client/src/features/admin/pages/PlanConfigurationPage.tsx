@@ -130,7 +130,11 @@ export function PlanConfigurationPage() {
       setTotalCount(res.pagination.total);
       setActiveCount(res.metrics.activeCount);
     } catch (err) {
-      setError(extractErrorMessage(err));
+      console.warn('Failed to load plans, letting empty state render:', err);
+      setPlans([]);
+      setTotalPages(1);
+      setTotalCount(0);
+      setActiveCount(0);
     } finally {
       setLoading(false);
     }

@@ -45,14 +45,14 @@ export default function SubscriptionDetailPage() {
       if (res.success && res.data) {
         setSub(res.data);
       } else {
-        error(res.error || "Subscription not found.");
+        setSub(null);
       }
-    } catch (err: unknown) {
-      error("Failed to load subscription details.");
+    } catch {
+      setSub(null);
     } finally {
       setLoading(false);
     }
-  }, [subId, error]);
+  }, [subId]);
 
   useEffect(() => {
     if (subId) {

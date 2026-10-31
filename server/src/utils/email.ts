@@ -52,8 +52,9 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
   return { success: true, previewUrl: 'Console preview (Development Mode)' };
 }
 
-export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
-  const resetLink = `${env.CLIENT_URL}/reset-password?token=${resetToken}`;
+export async function sendPasswordResetEmail(email: string, resetToken: string, baseUrl?: string): Promise<void> {
+  const origin = (baseUrl ? baseUrl.replace(/\/$/, '') : null) || env.CLIENT_URL || 'http://localhost:3000';
+  const resetLink = `${origin}/reset-password?token=${resetToken}`;
   const subject = 'Reset your Subscriptly password';
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #171923; background: #ffffff; border-radius: 12px; border: 1px solid #E8EAF0;">
