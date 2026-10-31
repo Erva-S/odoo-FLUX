@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-error":"#ffffff","on-secondary-fixed-variant":"#3436a9","surface-container-lowest":"#ffffff","secondary-container":"#868aff","surface-container-high":"#e7e7f5","on-tertiary":"#ffffff","background":"#fbf8ff","primary":"#3b3dc0","outline-variant":"#c7c5d6","inverse-on-surface":"#f0effe","on-primary":"#ffffff","on-secondary-fixed":"#05006c","tertiary":"#005d3c","on-secondary-container":"#171592","outline":"#767585","surface-container-low":"#f3f2ff","on-background":"#191b25","on-primary-fixed":"#06006c","on-primary-fixed-variant":"#3131b6","on-surface-variant":"#464554","on-tertiary-fixed-variant":"#005235","surface-dim":"#d9d9e7","secondary":"#4d50c2","surface-bright":"#fbf8ff","on-primary-container":"#e8e6ff","on-secondary":"#ffffff","surface-tint":"#4a4dce","primary-fixed":"#e1e0ff","surface-container":"#ededfb","inverse-surface":"#2e303b","surface-variant":"#e1e1f0","inverse-primary":"#c0c1ff","tertiary-fixed":"#93f6c3","surface":"#fbf8ff","surface-container-highest":"#e1e1f0","error-container":"#ffdad6","on-error-container":"#93000a","on-surface":"#191b25","on-tertiary-container":"#99fdc9","primary-fixed-dim":"#c0c1ff","tertiary-container":"#00784f","tertiary-fixed-dim":"#77daa8","secondary-fixed-dim":"#c0c1ff","secondary-fixed":"#e1e0ff","error":"#ba1a1a","primary-container":"#5558d9","on-tertiary-fixed":"#002113"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"margin-desktop":"2rem","space-xl":"1.5rem","space-sm":"0.5rem","gutter":"1rem","space-md":"0.75rem","gutter-desktop":"1.5rem","space-xs":"0.25rem","margin":"1rem","space-lg":"1rem"},"fontFamily":{"title-md":["Inter"],"metric-display":["Geist"],"body-default":["Inter"],"label-caps":["Inter"],"headline-lg":["Geist"],"headline-sm":["Geist"],"headline-xl":["Geist"],"label-default":["Inter"],"body-sm":["Inter"],"data-mono":["Geist"],"body-medium":["Inter"]},"fontSize":{"title-md":["15px",{"lineHeight":"22px","letterSpacing":"-0.01em","fontWeight":"600"}],"metric-display":["28px",{"lineHeight":"34px","letterSpacing":"-0.03em","fontWeight":"600"}],"body-default":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-caps":["11px",{"lineHeight":"16px","letterSpacing":"0.04em","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.02em","fontWeight":"600"}],"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-xl":["32px",{"lineHeight":"40px","letterSpacing":"-0.025em","fontWeight":"600"}],"label-default":["12px",{"lineHeight":"16px","fontWeight":"500"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"data-mono":["13px",{"lineHeight":"18px","letterSpacing":"-0.01em","fontWeight":"500"}],"body-medium":["14px",{"lineHeight":"20px","fontWeight":"500"}]}}}}</script></head><body class="bg-surface font-body-default text-body-default text-on-surface antialiased"><aside class="fixed left-0 top-0 h-screen w-64 bg-surface-container-lowest border-r border-outline-variant/30 z-50 flex flex-col justify-between select-none"><div class="flex flex-col flex-1 overflow-hidden"><div class="h-16 px-space-lg flex items-center justify-between border-b border-outline-variant/20 flex-shrink-0"><div class="flex items-center gap-space-sm"><img alt="Subscriptly Brand Mark" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1V143KHzd0m_UCfdEMz0nU57q3l4fbiBqe-8Rv2DB-WdgEW5ED0be_Kh4hCcWuoQkWIKUk71pleEDn2J4o0Zh7qCfHwmGKcOskwEB6p1nFXfsml-UNfI1oj4WeM2WXEZWnwB2OzR5hcCsW3Q21jzCiHqitEswojf_RD0iRW9S4BdP5rPeRMhMFwmmZBgUmNxLq8zKWCiQ32ttqxhB9DGVcJ0Q8hotBxiOXHsyyUtfe1"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface leading-none">Subscriptly</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mt-0.5">Brightloop</span></div></div><span class="px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps uppercase">v2.4</span></div><nav class="flex-1 overflow-y-auto px-space-md py-space-md space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-body-medium"><div class="px-space-sm pt-space-xs pb-1 font-label-caps text-label-caps uppercase text-outline tracking-wider">Revenue Engine</div><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">dashboard</span><span class="font-body-medium text-body-medium">Overview</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="customers" href="#"><span class="material-symbols-outlined text-[20px]">group</span><span class="font-body-medium text-body-medium">Customers</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="products" href="#"><span class="material-symbols-outlined text-[20px]">inventory_2</span><span class="font-body-medium text-body-medium">Products</span></a><a aria-current="page" class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg transition-colors bg-primary-container text-on-primary font-body-medium" data-path="plans" href="#"><span class="material-symbols-outlined text-[20px]">layers</span><span class="font-body-medium text-body-medium">Plans</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="subscriptions" href="#"><span class="material-symbols-outlined text-[20px]">autorenew</span><span class="font-body-medium text-body-medium">Subscriptions</span></a><div class="px-space-sm pt-space-md pb-1 font-label-caps text-label-caps uppercase text-outline tracking-wider">Billing & Finance</div><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-space-container-low hover:text-on-surface transition-colors" data-path="quotations" href="#"><span class="material-symbols-outlined text-[20px]">request_quote</span><span class="font-body-medium text-body-medium">Quotations</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="invoices" href="#"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span class="font-body-medium text-body-medium">Invoices</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="payments" href="#"><span class="material-symbols-outlined text-[20px]">payments</span><span class="font-body-medium text-body-medium">Payments</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="discounts" href="#"><span class="material-symbols-outlined text-[20px]">sell</span><span class="font-body-medium text-body-medium">Discounts</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="taxes" href="#"><span class="material-symbols-outlined text-[20px]">percent</span><span class="font-body-medium text-body-medium">Taxes</span></a><div class="px-space-sm pt-space-md pb-1 font-label-caps text-label-caps uppercase text-outline tracking-wider">Governance</div><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="reports" href="#"><span class="material-symbols-outlined text-[20px]">monitoring</span><span class="font-body-medium text-body-medium">Reports</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="staff" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-[20px]">badge</span><span class="font-body-medium text-body-medium">Staff</span></div><span class="px-space-xs py-0.5 rounded text-[10px] uppercase font-label-caps bg-primary-fixed text-on-primary-fixed font-semibold">Admin</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span class="font-body-medium text-body-medium">Settings</span></a></nav></div><div class="p-space-md border-t border-outline-variant/20 bg-surface-container-lowest flex-shrink-0"><div class="flex items-center justify-between gap-space-sm p-space-sm rounded-lg bg-surface-container-low"><div class="flex items-center gap-space-sm min-w-0"><img alt="Profile" class="w-8 h-8 rounded-full object-cover flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuADJpjjh8ApxgTuIH5sxssqY5kpa_Iah1cs0kW7u1iI_U82pW2altYOVUet5OQuRMHLbwm9E21FoHBcHlHNwpwoMUHa_wMbvEJUhU011zmBrCxgbQ-sO_4ZugJA2r_ZMr7BRTd6AmdzOPAjUleKtcxTh11hvI54_166F5ro_5RoYJHlaoaQyOg9R09v_fiePMiVYGOkzJ_AwaUBYpn1IdkKbyniLNRARroDu3_Gq0M"/><div class="flex flex-col min-w-0"><div class="flex items-center gap-1"><span class="font-title-md text-body-medium text-on-surface truncate">Priya Sharma</span><span class="px-1.5 py-0.2 rounded-full bg-tertiary-fixed text-on-tertiary-fixed text-[10px] font-label-caps">Admin</span></div><span class="font-body-sm text-body-sm text-on-surface-variant truncate">Brightloop Software</span></div></div><button class="p-space-xs rounded text-outline hover:text-error hover:bg-error-container/40 transition-colors" title="Log out" type="button"><span class="material-symbols-outlined text-[18px]">logout</span></button></div></div></aside><div class="pl-64 min-h-screen flex flex-col bg-surface"><header class="sticky top-0 h-16 w-full bg-surface-container-lowest border-b border-outline-variant/30 z-40 px-space-xl flex items-center justify-between"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm text-body-sm text-on-surface-variant"><span class="hover:text-on-surface transition-colors cursor-pointer">Subscriptly</span><span class="text-outline-variant">/</span><span class="font-body-medium text-on-surface">Platform Control</span></div><div class="hidden lg:flex items-center bg-surface-container rounded-full p-0.5 border border-outline-variant/20"><button class="px-space-md py-0.5 rounded-full font-label-default text-label-default bg-surface-container-lowest text-primary shadow-[0_1px_2px_rgba(0,0,0,0.06)]" type="button">Admin</button><button class="px-space-md py-0.5 rounded-full font-label-default text-label-default text-on-surface-variant hover:text-on-surface" type="button">Staff</button><button class="px-space-md py-0.5 rounded-full font-label-default text-label-default text-on-surface-variant hover:text-on-surface" type="button">Portal</button></div></div><div class="flex items-center gap-space-md"><div class="relative w-64 md:w-80"><span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span><input class="w-full h-9 pl-9 pr-12 rounded-lg bg-surface-container-low border border-outline-variant/30 text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:bg-surface-container-lowest transition-colors" placeholder="Search subscriptions, invoices..." type="text"/><kbd class="absolute right-space-sm top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant text-[11px] font-data-mono">⌘K</kbd></div><div class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-low border border-outline-variant/30"><span class="font-data-mono text-body-sm text-tertiary font-semibold">₹</span><span class="font-label-default text-label-default text-on-surface-variant">INR</span></div><button class="relative p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-error text-on-error text-[10px] font-label-caps flex items-center justify-center font-bold">3</span></button><div class="flex items-center gap-space-sm pl-space-sm border-l border-outline-variant/20 cursor-pointer"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuADJpjjh8ApxgTuIH5sxssqY5kpa_Iah1cs0kW7u1iI_U82pW2altYOVUet5OQuRMHLbwm9E21FoHBcHlHNwpwoMUHa_wMbvEJUhU011zmBrCxgbQ-sO_4ZugJA2r_ZMr7BRTd6AmdzOPAjUleKtcxTh11hvI54_166F5ro_5RoYJHlaoaQyOg9R09v_fiePMiVYGOkzJ_AwaUBYpn1IdkKbyniLNRARroDu3_Gq0M"/><span class="material-symbols-outlined text-outline text-[18px]">expand_more</span></div></div></header><main class="w-full flex-1 pt-0 p-space-xl bg-surface"><div class="flex flex-col w-full">
+<!-- Top Context Header Area -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-lg mb-space-xl">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-sm mb-1">
+<span class="px-space-xs py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-label-caps text-label-caps uppercase tracking-wider">Plan Architect</span>
+<span class="text-outline font-label-default text-label-default">•</span>
+<span class="font-data-mono text-body-sm text-outline">v2.4.9 Engine</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Subscription Plans</h1>
+<p class="font-body-default text-body-default text-on-surface-variant max-w-2xl mt-1">
+        Define recurring billing frequencies, renewal rules, pause limits, and early closure policies across product catalogs.
+      </p>
+</div>
+<!-- Quick Actions -->
+<div class="flex items-center gap-space-md self-start lg:self-center">
+<button class="flex items-center gap-space-sm px-space-md py-2 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-all text-body-medium font-body-medium shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">file_download</span>
+        Export Rules JSON
+      </button>
+<button class="flex items-center gap-space-sm px-space-lg py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-all font-body-medium text-body-medium shadow-md hover:shadow-lg active:scale-95" onclick="document.getElementById('plan-drawer').classList.remove('translate-x-full')" type="button">
+<span class="material-symbols-outlined text-[20px]">add</span>
+        + Create Plan
+      </button>
+</div>
+</div>
+<!-- KPI / Micro Health Bar Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-lg mb-space-xl">
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline">Active Plan Blueprints</span>
+<span class="material-symbols-outlined text-outline text-[18px]">layers</span>
+</div>
+<div class="mt-3 flex items-baseline gap-space-sm">
+<span class="font-metric-display text-metric-display text-on-surface">14</span>
+<span class="px-space-xs py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-default text-label-default">96% Live</span>
+</div>
+<div class="mt-2 text-on-surface-variant text-body-sm font-body-sm flex items-center justify-between">
+<span>4 Frequencies</span>
+<span class="font-data-mono text-tertiary font-semibold">+2 Scheduled</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline">Pause Guard Triggered</span>
+<span class="material-symbols-outlined text-outline text-[18px]">pause_circle</span>
+</div>
+<div class="mt-3 flex items-baseline gap-space-sm">
+<span class="font-metric-display text-metric-display text-on-surface">42</span>
+<span class="text-on-surface-variant font-body-sm">tenants</span>
+</div>
+<div class="mt-2 text-on-surface-variant text-body-sm font-body-sm flex items-center justify-between">
+<span>Max 2 cycles enforcement</span>
+<span class="font-data-mono text-on-surface">98.2% restored</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline">Auto-Close Clawbacks</span>
+<span class="material-symbols-outlined text-outline text-[18px]">cancel_schedule_send</span>
+</div>
+<div class="mt-3 flex items-baseline gap-space-sm">
+<span class="font-metric-display text-metric-display text-on-surface">₹1,48,200</span>
+</div>
+<div class="mt-2 text-on-surface-variant text-body-sm font-body-sm flex items-center justify-between">
+<span>Penalty yield</span>
+<span class="font-data-mono text-tertiary">+12.4% MoM</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps uppercase text-outline">Auto-Renewal Velocity</span>
+<span class="material-symbols-outlined text-outline text-[18px]">autorenew</span>
+</div>
+<div class="mt-3 flex items-baseline gap-space-sm">
+<span class="font-metric-display text-metric-display text-on-surface">91.8%</span>
+<span class="text-tertiary font-body-sm font-semibold">↑ High</span>
+</div>
+<div class="mt-2 text-on-surface-variant text-body-sm font-body-sm flex items-center justify-between">
+<span>7-day notification rule</span>
+<span class="font-data-mono text-on-surface">1,840 pending</span>
+</div>
+</div>
+</div>
+<!-- Filter & Segmentation Segmented Tab Bar -->
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md mb-space-lg">
+<!-- Billing Frequency Filter Tabs -->
+<div class="bg-surface-container-low p-1 rounded-xl flex items-center gap-1 shadow-sm">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest text-on-surface font-body-medium text-body-medium shadow-sm transition-colors" type="button">
+        All Plans
+      </button>
+<button class="px-space-md py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface font-body-medium text-body-medium transition-colors" type="button">
+        Monthly
+      </button>
+<button class="px-space-md py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface font-body-medium text-body-medium transition-colors" type="button">
+        Yearly
+      </button>
+<button class="px-space-md py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface font-body-medium text-body-medium transition-colors" type="button">
+        Quarterly
+      </button>
+<button class="px-space-md py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface font-body-medium text-body-medium transition-colors" type="button">
+        Custom / Weekly
+      </button>
+</div>
+<!-- Secondary Controls -->
+<div class="flex items-center gap-space-sm w-full md:w-auto">
+<div class="relative flex-1 md:w-64">
+<span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-outline text-[18px]">filter_list</span>
+<input class="w-full h-9 pl-9 pr-3 rounded-lg bg-surface-container-lowest text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-low transition-colors shadow-sm" placeholder="Filter tier or product..." type="text"/>
+</div>
+<button class="h-9 px-space-md rounded-lg bg-surface-container-lowest text-on-surface-variant hover:text-on-surface flex items-center gap-1 text-body-sm font-body-medium shadow-sm" type="button">
+<span>Columns</span>
+<span class="material-symbols-outlined text-[16px]">tune</span>
+</button>
+</div>
+</div>
+<!-- Plan Cards Grid Showcase -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-lg mb-space-xl">
+<!-- 1. Starter Cloud Tier -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between relative group">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-default text-label-default">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+            Active
+          </span>
+<span class="font-data-mono text-[11px] text-outline font-semibold">SKU-BRT-01</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Starter Cloud Tier</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Essential workspace engine for pre-seed teams.</p>
+<div class="mt-space-md pb-space-md">
+<div class="flex items-baseline gap-1">
+<span class="font-data-mono text-title-md text-tertiary">₹</span>
+<span class="font-metric-display text-metric-display text-on-surface">1,999</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ mo</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Billed Monthly</span>
+</div>
+<!-- Rules Snapshot -->
+<div class="space-y-space-xs mt-space-sm pt-space-sm bg-surface-container-low p-space-md rounded-lg">
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Base Product</span>
+<span class="font-body-medium text-on-surface truncate">Brightloop Core</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Min Seats / Qty</span>
+<span class="font-data-mono text-on-surface font-semibold">1 unit</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Renewal Model</span>
+<span class="text-tertiary font-body-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">sync</span> Auto-renew
+            </span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Pause Allowance</span>
+<span class="font-body-medium text-on-surface">30 days max</span>
+</div>
+</div>
+</div>
+<div class="mt-space-lg pt-space-md flex items-center justify-between">
+<button class="font-body-medium text-body-sm text-primary hover:text-primary-container flex items-center gap-1" onclick="document.getElementById('plan-drawer').classList.remove('translate-x-full')" type="button">
+<span>Edit Policy</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+<span class="material-symbols-outlined text-outline hover:text-on-surface cursor-pointer text-[18px]">more_horiz</span>
+</div>
+</div>
+<!-- 2. Growth Business Suite -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between relative group">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-default text-label-default">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            Popular
+          </span>
+<span class="font-data-mono text-[11px] text-outline font-semibold">SKU-BRT-02</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Growth Business Suite</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Scale operations with compliance & automation.</p>
+<div class="mt-space-md pb-space-md">
+<div class="flex items-baseline gap-1">
+<span class="font-data-mono text-title-md text-tertiary">₹</span>
+<span class="font-metric-display text-metric-display text-on-surface">6,499</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ mo</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">or ₹69,999/yr</span>
+<span class="px-1.5 py-0.2 rounded bg-tertiary-fixed text-on-tertiary-fixed text-[10px] font-data-mono font-semibold">10% OFF</span>
+</div>
+</div>
+<!-- Rules Snapshot -->
+<div class="space-y-space-xs mt-space-sm pt-space-sm bg-surface-container-low p-space-md rounded-lg">
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Base Product</span>
+<span class="font-body-medium text-on-surface truncate">Business Suite Pro</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Min Seats / Qty</span>
+<span class="font-data-mono text-on-surface font-semibold">5 users</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Early Closure Penalty</span>
+<span class="text-error font-body-medium font-data-mono">10% fee</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Auto-Close Safeguard</span>
+<span class="font-body-medium text-on-surface">Disabled</span>
+</div>
+</div>
+</div>
+<div class="mt-space-lg pt-space-md flex items-center justify-between">
+<button class="font-body-medium text-body-sm text-primary hover:text-primary-container flex items-center gap-1" onclick="document.getElementById('plan-drawer').classList.remove('translate-x-full')" type="button">
+<span>Edit Policy</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+<span class="material-symbols-outlined text-outline hover:text-on-surface cursor-pointer text-[18px]">more_horiz</span>
+</div>
+</div>
+<!-- 3. Enterprise Custom SLA -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between relative group">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-default text-label-default">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            Enterprise
+          </span>
+<span class="font-data-mono text-[11px] text-outline font-semibold">SKU-BRT-ENT</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Enterprise Custom SLA</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">High availability with tailored legal addenda.</p>
+<div class="mt-space-md pb-space-md">
+<div class="flex items-baseline gap-1">
+<span class="font-data-mono text-title-md text-tertiary">₹</span>
+<span class="font-metric-display text-metric-display text-on-surface">24,999</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ mo</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Quarterly Billed Base</span>
+</div>
+<!-- Rules Snapshot -->
+<div class="space-y-space-xs mt-space-sm pt-space-sm bg-surface-container-low p-space-md rounded-lg">
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Base Product</span>
+<span class="font-body-medium text-on-surface truncate">Brightloop Full Suite</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Min Seats / Qty</span>
+<span class="font-data-mono text-on-surface font-semibold">20 users</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Renewal Model</span>
+<span class="text-on-surface-variant font-body-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">how_to_reg</span> Manual Approval
+            </span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Account Manager</span>
+<span class="font-body-medium text-tertiary">Dedicated</span>
+</div>
+</div>
+</div>
+<div class="mt-space-lg pt-space-md flex items-center justify-between">
+<button class="font-body-medium text-body-sm text-primary hover:text-primary-container flex items-center gap-1" onclick="document.getElementById('plan-drawer').classList.remove('translate-x-full')" type="button">
+<span>Edit Policy</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+<span class="material-symbols-outlined text-outline hover:text-on-surface cursor-pointer text-[18px]">more_horiz</span>
+</div>
+</div>
+<!-- 4. Developer API Flex -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between relative group">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-default text-label-default">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+            Metered / Flex
+          </span>
+<span class="font-data-mono text-[11px] text-outline font-semibold">SKU-BRT-API</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Developer API Flex</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">High-cadence usage tier with micro-intervals.</p>
+<div class="mt-space-md pb-space-md">
+<div class="flex items-baseline gap-1">
+<span class="font-data-mono text-title-md text-tertiary">₹</span>
+<span class="font-metric-display text-metric-display text-on-surface">999</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ week</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">or ₹3,499 / Month</span>
+</div>
+<!-- Rules Snapshot -->
+<div class="space-y-space-xs mt-space-sm pt-space-sm bg-surface-container-low p-space-md rounded-lg">
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Base Product</span>
+<span class="font-body-medium text-on-surface truncate">API Gateway Edge</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Min Seats / Qty</span>
+<span class="font-data-mono text-on-surface font-semibold">1 token key</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Renewal Model</span>
+<span class="text-tertiary font-body-medium">Weekly Auto</span>
+</div>
+<div class="flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Pause Allowance</span>
+<span class="font-body-medium text-on-surface">Instant Pause</span>
+</div>
+</div>
+</div>
+<div class="mt-space-lg pt-space-md flex items-center justify-between">
+<button class="font-body-medium text-body-sm text-primary hover:text-primary-container flex items-center gap-1" onclick="document.getElementById('plan-drawer').classList.remove('translate-x-full')" type="button">
+<span>Edit Policy</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+<span class="material-symbols-outlined text-outline hover:text-on-surface cursor-pointer text-[18px]">more_horiz</span>
+</div>
+</div>
+</div>
+<!-- Detailed Plan Matrix & Governance Table -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden mb-space-xl">
+<div class="p-space-lg flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Governance & Execution Matrix</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Direct comparison of contract rules, penalties, and automated triggers</p>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-default text-label-default text-on-surface-variant">Live Enforcement:</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-data-mono text-[11px] font-semibold">
+          STRICT MODE ON
+        </span>
+</div>
+</div>
+<!-- Tabular Overview -->
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low text-outline font-label-caps text-label-caps uppercase tracking-wider">
+<th class="py-space-md px-space-lg">Plan & SKU</th>
+<th class="py-space-md px-space-lg">Base Product</th>
+<th class="py-space-md px-space-lg">Billing Cycle</th>
+<th class="py-space-md px-space-lg text-right">Base Price (INR)</th>
+<th class="py-space-md px-space-lg">Renewal Logic</th>
+<th class="py-space-md px-space-lg">Customer Pause</th>
+<th class="py-space-md px-space-lg">Early Exit Penalty</th>
+<th class="py-space-md px-space-lg">Auto-Close</th>
+<th class="py-space-md px-space-lg text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-high/40 font-body-default text-body-default">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex flex-col">
+<span class="font-body-medium text-on-surface">Starter Cloud Tier</span>
+<span class="font-data-mono text-outline text-[12px]">SKU-BRT-01</span>
+</div>
+</td>
+<td class="py-space-md px-space-lg text-on-surface-variant">Brightloop Core</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-default text-label-default">Monthly</span>
+</td>
+<td class="py-space-md px-space-lg text-right font-data-mono font-semibold text-on-surface">₹1,999</td>
+<td class="py-space-md px-space-lg">
+<span class="inline-flex items-center gap-1 text-tertiary font-body-medium text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Auto (7d notice)
+              </span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="text-on-surface-variant text-body-sm">Allowed (≤ 30 days)</span>
+</td>
+<td class="py-space-md px-space-lg text-on-surface-variant font-data-mono text-body-sm">0%</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-tertiary-fixed/60 text-on-tertiary-fixed font-label-caps text-label-caps">ENABLED (14d)</span>
+</td>
+<td class="py-space-md px-space-lg text-right">
+<button class="p-1 rounded text-outline hover:text-on-surface transition-colors" title="Plan Options" type="button">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex flex-col">
+<span class="font-body-medium text-on-surface">Growth Business Suite</span>
+<span class="font-data-mono text-outline text-[12px]">SKU-BRT-02</span>
+</div>
+</td>
+<td class="py-space-md px-space-lg text-on-surface-variant">Business Suite Pro</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-label-default text-label-default">Mo / Yr (10% off)</span>
+</td>
+<td class="py-space-md px-space-lg text-right font-data-mono font-semibold text-on-surface">₹6,499</td>
+<td class="py-space-md px-space-lg">
+<span class="inline-flex items-center gap-1 text-tertiary font-body-medium text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Auto-Renewal
+              </span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="text-on-surface-variant text-body-sm">Max 2 cycles</span>
+</td>
+<td class="py-space-md px-space-lg font-data-mono text-error font-semibold text-body-sm">10% Remainder</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-outline font-label-caps text-label-caps">DISABLED</span>
+</td>
+<td class="py-space-md px-space-lg text-right">
+<button class="p-1 rounded text-outline hover:text-on-surface transition-colors" title="Plan Options" type="button">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex flex-col">
+<span class="font-body-medium text-on-surface">Enterprise Custom SLA</span>
+<span class="font-data-mono text-outline text-[12px]">SKU-BRT-ENT</span>
+</div>
+</td>
+<td class="py-space-md px-space-lg text-on-surface-variant">Brightloop Full Suite</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-default text-label-default">Quarterly / Custom</span>
+</td>
+<td class="py-space-md px-space-lg text-right font-data-mono font-semibold text-on-surface">₹24,999</td>
+<td class="py-space-md px-space-lg">
+<span class="inline-flex items-center gap-1 text-secondary font-body-medium text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Manual Signoff
+              </span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="text-on-surface-variant text-body-sm">SLA Governed</span>
+</td>
+<td class="py-space-md px-space-lg font-data-mono text-error font-semibold text-body-sm">Contractual Flat</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-error-container text-on-error-container font-label-caps text-label-caps">LEGAL HOLD</span>
+</td>
+<td class="py-space-md px-space-lg text-right">
+<button class="p-1 rounded text-outline hover:text-on-surface transition-colors" title="Plan Options" type="button">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex flex-col">
+<span class="font-body-medium text-on-surface">Developer API Flex</span>
+<span class="font-data-mono text-outline text-[12px]">SKU-BRT-API</span>
+</div>
+</td>
+<td class="py-space-md px-space-lg text-on-surface-variant">API Gateway Edge</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-default text-label-default">Weekly / Metered</span>
+</td>
+<td class="py-space-md px-space-lg text-right font-data-mono font-semibold text-on-surface">₹999</td>
+<td class="py-space-md px-space-lg">
+<span class="inline-flex items-center gap-1 text-tertiary font-body-medium text-body-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span> Auto-Renew
+              </span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="text-on-surface-variant text-body-sm">Instant / Self-serve</span>
+</td>
+<td class="py-space-md px-space-lg font-data-mono text-on-surface-variant text-body-sm">0%</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-tertiary-fixed/60 text-on-tertiary-fixed font-label-caps text-label-caps">ENABLED (3d)</span>
+</td>
+<td class="py-space-md px-space-lg text-right">
+<button class="p-1 rounded text-outline hover:text-on-surface transition-colors" title="Plan Options" type="button">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination / Summary Footer -->
+<div class="px-space-lg py-space-md bg-surface-container-lowest flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-outline">Showing 4 of 4 active plan configurations</span>
+<div class="flex items-center gap-space-sm">
+<button class="p-1.5 rounded bg-surface-container-low text-outline hover:text-on-surface disabled:opacity-40" disabled="" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<span class="font-data-mono text-body-sm text-on-surface px-2">Page 1 of 1</span>
+<button class="p-1.5 rounded bg-surface-container-low text-outline hover:text-on-surface disabled:opacity-40" disabled="" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Operational Health & Insights Row -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg mb-space-xl">
+<!-- Automated Rules Audit -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Auto-Rules Enforcement</h4>
+<span class="material-symbols-outlined text-tertiary text-[20px]">verified</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+          Subscriptly evaluates lifecycle compliance every 15 minutes across all active recurring contracts.
+        </p>
+<!-- Rule Log Items -->
+<div class="space-y-space-sm">
+<div class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-tertiary text-[18px] mt-0.5">done</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-medium text-body-sm text-on-surface">7-Day Renewal Notification Push</span>
+<span class="font-data-mono text-[11px] text-outline">184 dispatched today • 0 failed delivery</span>
+</div>
+</div>
+<div class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-secondary text-[18px] mt-0.5">pause</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-medium text-body-sm text-on-surface">Pause Limits Capped</span>
+<span class="font-data-mono text-[11px] text-outline">3 accounts reached 2-cycle ceiling</span>
+</div>
+</div>
+<div class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-error text-[18px] mt-0.5">gavel</span>
+<div class="flex flex-col min-w-0">
+<span class="font-body-medium text-body-sm text-on-surface">Early Exit Fees Applied</span>
+<span class="font-data-mono text-[11px] text-outline">₹12,400 liquidated under 10% penalty</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-space-lg pt-space-sm flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-outline uppercase">Audit Log Sync: Active</span>
+<button class="text-primary font-body-medium text-body-sm hover:underline" type="button">View Engine Logs</button>
+</div>
+</div>
+<!-- Frequency Breakdown Chart -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Billing Velocity Distribution</h4>
+<span class="font-data-mono text-body-sm text-outline">Total ARR Share</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Real-time revenue split categorized by contract cadence.</p>
+<!-- SVG Donut Chart Visual -->
+<div class="flex items-center justify-center py-2">
+<svg class="w-36 h-36" viewbox="0 0 160 160">
+<circle cx="80" cy="80" fill="transparent" r="60" stroke="#E7E7F5" stroke-width="20"></circle>
+<!-- Monthly: 58% -->
+<circle cx="80" cy="80" fill="transparent" r="60" stroke="#5558D9" stroke-dasharray="377" stroke-dashoffset="158" stroke-linecap="round" stroke-width="20"></circle>
+<!-- Yearly: 28% -->
+<circle cx="80" cy="80" fill="transparent" r="60" stroke="#00784F" stroke-dasharray="377" stroke-dashoffset="271" stroke-linecap="round" stroke-width="20" transform="rotate(208 80 80)"></circle>
+<!-- Custom/Weekly: 14% -->
+<circle cx="80" cy="80" fill="transparent" r="60" stroke="#868AFF" stroke-dasharray="377" stroke-dashoffset="324" stroke-linecap="round" stroke-width="20" transform="rotate(310 80 80)"></circle>
+</svg>
+</div>
+<div class="grid grid-cols-3 gap-2 text-center mt-2">
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-data-mono text-headline-sm text-primary font-semibold">58%</span>
+<span class="font-label-caps text-[10px] text-outline uppercase">Monthly</span>
+</div>
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-data-mono text-headline-sm text-tertiary font-semibold">28%</span>
+<span class="font-label-caps text-[10px] text-outline uppercase">Yearly</span>
+</div>
+<div class="p-2 rounded bg-surface-container-low">
+<span class="block font-data-mono text-headline-sm text-secondary font-semibold">14%</span>
+<span class="font-label-caps text-[10px] text-outline uppercase">Weekly/Flex</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between text-body-sm text-on-surface-variant">
+<span>Yearly shift incentive: +10%</span>
+<span class="font-data-mono text-tertiary font-semibold">Healthy</span>
+</div>
+</div>
+<!-- Product Affinity & Catalog Linkage -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Base Product Linkage</h4>
+<span class="px-space-xs py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-caps text-label-caps uppercase">Auto-Bound</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Subscription blueprints coupled with ledger catalog SKUs.</p>
+<div class="space-y-space-sm">
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">layers</span>
+<div class="flex flex-col">
+<span class="font-body-medium text-body-sm text-on-surface">Brightloop Core</span>
+<span class="font-data-mono text-[11px] text-outline">SKU-PRD-001 • Base SaaS</span>
+</div>
+</div>
+<span class="font-data-mono text-body-sm text-on-surface font-semibold">1 Plan</span>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">business_center</span>
+<div class="flex flex-col">
+<span class="font-body-medium text-body-sm text-on-surface">Business Suite Pro</span>
+<span class="font-data-mono text-[11px] text-outline">SKU-PRD-002 • Multi-Seat</span>
+</div>
+</div>
+<span class="font-data-mono text-body-sm text-on-surface font-semibold">2 Plans</span>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">hub</span>
+<div class="flex flex-col">
+<span class="font-body-medium text-body-sm text-on-surface">API Gateway Edge</span>
+<span class="font-data-mono text-[11px] text-outline">SKU-PRD-003 • Micro-Usage</span>
+</div>
+</div>
+<span class="font-data-mono text-body-sm text-on-surface font-semibold">1 Plan</span>
+</div>
+</div>
+</div>
+<div class="mt-space-lg pt-space-sm">
+<a class="font-body-medium text-body-sm text-primary hover:text-primary-container flex items-center gap-1" href="#">
+<span>Manage Master Products Catalog</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Plan Configuration Slide-Over Drawer (Simulated Full Business Editor) -->
+<aside class="fixed top-0 right-0 h-screen w-full md:w-[560px] bg-surface-container-lowest shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col" id="plan-drawer">
+<!-- Drawer Header -->
+<div class="h-16 px-space-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">tune</span>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface leading-tight">Plan Configuration</h3>
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Recurring Rule Engine</span>
+</div>
+</div>
+<button class="p-space-xs rounded-lg text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors" onclick="document.getElementById('plan-drawer').classList.add('translate-x-full')" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Drawer Body Form -->
+<div class="flex-1 overflow-y-auto p-space-xl space-y-space-lg">
+<!-- Section 1: Identification & Base Linkage -->
+<div class="space-y-space-md">
+<span class="font-label-caps text-label-caps text-primary uppercase tracking-wider font-semibold">1. Basic Definitions</span>
+<div>
+<label class="block font-label-default text-label-default text-on-surface mb-1">Plan Name</label>
+<input class="w-full h-10 px-space-md rounded-lg bg-surface-container-low text-body-default text-on-surface focus:outline-none focus:bg-surface-container-lowest transition-colors shadow-sm" placeholder="e.g. Enterprise Tier" type="text" value="Growth Business Suite"/>
+</div>
+<div>
+<label class="block font-label-default text-label-default text-on-surface mb-1">Associated Base Product</label>
+<div class="relative">
+<select class="w-full h-10 px-space-md pr-10 rounded-lg bg-surface-container-low text-body-default text-on-surface appearance-none focus:outline-none focus:bg-surface-container-lowest transition-colors shadow-sm">
+<option selected="">Business Suite Pro (SKU-PRD-002)</option>
+<option>Brightloop Core (SKU-PRD-001)</option>
+<option>Brightloop Full Suite (SKU-PRD-ENT)</option>
+<option>API Gateway Edge (SKU-PRD-003)</option>
+</select>
+<span class="material-symbols-outlined absolute right-space-md top-1/2 -translate-y-1/2 pointer-events-none text-outline text-[18px]">unfold_more</span>
+</div>
+<span class="block mt-1 font-body-sm text-outline text-[12px]">All items bundled in this catalog product inherit subscription billing rules.</span>
+</div>
+</div>
+<div class="w-full h-px bg-surface-container-high"></div>
+<!-- Section 2: Frequency & Price Architecture -->
+<div class="space-y-space-md">
+<span class="font-label-caps text-label-caps text-primary uppercase tracking-wider font-semibold">2. Pricing & Frequency</span>
+<div>
+<label class="block font-label-default text-label-default text-on-surface mb-1">Billing Frequency</label>
+<div class="grid grid-cols-5 gap-1 bg-surface-container-low p-1 rounded-lg">
+<button class="py-1.5 rounded text-center font-label-default text-on-surface-variant hover:text-on-surface" type="button">Daily</button>
+<button class="py-1.5 rounded text-center font-label-default text-on-surface-variant hover:text-on-surface" type="button">Weekly</button>
+<button class="py-1.5 rounded text-center font-label-default bg-surface-container-lowest text-primary shadow-sm font-semibold" type="button">Monthly</button>
+<button class="py-1.5 rounded text-center font-label-default text-on-surface-variant hover:text-on-surface" type="button">Quarterly</button>
+<button class="py-1.5 rounded text-center font-label-default text-on-surface-variant hover:text-on-surface" type="button">Yearly</button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-space-md">
+<div>
+<label class="block font-label-default text-label-default text-on-surface mb-1">Monthly Base (INR)</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 font-data-mono text-tertiary font-semibold">₹</span>
+<input class="w-full h-10 pl-8 pr-space-md rounded-lg bg-surface-container-low font-data-mono text-body-default text-on-surface focus:outline-none focus:bg-surface-container-lowest transition-colors shadow-sm" type="text" value="6,499"/>
+</div>
+</div>
+<div>
+<label class="block font-label-default text-label-default text-on-surface mb-1">Yearly Discount Option</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 font-data-mono text-tertiary font-semibold">₹</span>
+<input class="w-full h-10 pl-8 pr-space-md rounded-lg bg-surface-container-low font-data-mono text-body-default text-on-surface focus:outline-none focus:bg-surface-container-lowest transition-colors shadow-sm" type="text" value="69,999"/>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-space-md">
+<div>
+<label class="block font-label-default text-label-default text-on-surface mb-1">Available From Date</label>
+<input class="w-full h-10 px-space-md rounded-lg bg-surface-container-low font-data-mono text-body-sm text-on-surface focus:outline-none focus:bg-surface-container-lowest transition-colors shadow-sm" type="date" value="2025-01-01"/>
+</div>
+<div>
+<label class="block font-label-default text-label-default text-on-surface mb-1">Available Until Date</label>
+<input class="w-full h-10 px-space-md rounded-lg bg-surface-container-low font-data-mono text-body-sm text-on-surface focus:outline-none focus:bg-surface-container-lowest transition-colors shadow-sm" type="date" value="2026-12-31"/>
+</div>
+</div>
+</div>
+<div class="w-full h-px bg-surface-container-high"></div>
+<!-- Section 3: Policy Toggles with Linear Controls -->
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-caps text-label-caps text-primary uppercase tracking-wider font-semibold">3. Operational Policy Controls</span>
+<span class="font-data-mono text-[11px] text-tertiary font-semibold">4 Enforceable Rules</span>
+</div>
+<!-- Policy Toggle 1: Auto-Close -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-outline text-[20px] mt-0.5">event_busy</span>
+<div>
+<span class="font-body-medium text-body-default text-on-surface block">Auto-Close Permission</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant block">Terminates agreement upon unpaid grace period expiration.</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<div class="flex items-center justify-between pt-1 border-t border-surface-container-high/60 text-[12px]">
+<span class="text-outline">Grace period window:</span>
+<span class="font-data-mono text-on-surface font-semibold">14 calendar days</span>
+</div>
+</div>
+<!-- Policy Toggle 2: Customer Pause -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-outline text-[20px] mt-0.5">pause_circle_outline</span>
+<div>
+<span class="font-body-medium text-body-default text-on-surface block">Customer Pause Permission</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant block">Allow customer portal users to temporarily suspend billing cycles.</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<div class="flex items-center justify-between pt-1 border-t border-surface-container-high/60 text-[12px]">
+<span class="text-outline">Max allowed paused cycles:</span>
+<div class="flex items-center gap-1 font-data-mono text-on-surface font-semibold">
+<span class="px-2 py-0.5 rounded bg-surface-container-lowest shadow-sm">2 billing cycles</span>
+</div>
+</div>
+</div>
+<!-- Policy Toggle 3: Early Closure -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-outline text-[20px] mt-0.5">price_check</span>
+<div>
+<span class="font-body-medium text-body-default text-on-surface block">Early Closure Penalty Calculation</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant block">Calculate contractual break fee prior to committed renewal date.</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<div class="flex items-center justify-between pt-1 border-t border-surface-container-high/60 text-[12px]">
+<span class="text-outline">Penalty Formula:</span>
+<span class="font-data-mono text-error font-semibold">10.0% of remaining term ARR</span>
+</div>
+</div>
+<!-- Policy Toggle 4: Auto-Renewal Trigger -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-outline text-[20px] mt-0.5">notifications_active</span>
+<div>
+<span class="font-body-medium text-body-default text-on-surface block">Auto-Renewal Permission & Notification</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant block">Seamless rollover with automated compliance notification sequence.</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<div class="flex items-center justify-between pt-1 border-t border-surface-container-high/60 text-[12px]">
+<span class="text-outline">Advance trigger notice:</span>
+<span class="font-data-mono text-tertiary font-semibold">7 Days Prior to Cycle End</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Drawer Footer Actions -->
+<div class="p-space-lg bg-surface-container-lowest shadow-md flex items-center justify-between">
+<button class="px-space-md py-2 rounded-lg text-on-surface-variant hover:text-on-surface font-body-medium text-body-medium transition-colors" onclick="document.getElementById('plan-drawer').classList.add('translate-x-full')" type="button">
+        Cancel
+      </button>
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-2 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest font-body-medium text-body-medium transition-colors" type="button">
+          Save Draft
+        </button>
+<button class="px-space-lg py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-body-medium text-body-medium shadow-md transition-colors" onclick="document.getElementById('plan-drawer').classList.add('translate-x-full')" type="button">
+          Publish Plan
+        </button>
+</div>
+</div>
+</aside>
+<!-- Global Backdrop for Drawer Interaction -->
+<div class="fixed inset-0 bg-inverse-surface/20 backdrop-blur-sm z-40 hidden pointer-events-none" id="drawer-backdrop" onclick="document.getElementById('plan-drawer').classList.add('translate-x-full')"></div>
+<!-- Inline Script for Drawer Backdrop Toggle -->
+<script>
+    const drawer = document.getElementById('plan-drawer');
+    const backdrop = document.getElementById('drawer-backdrop');
+    
+    const observer = new MutationObserver(() => {
+      if (drawer.classList.contains('translate-x-full')) {
+        backdrop.classList.add('hidden');
+        backdrop.classList.add('pointer-events-none');
+      } else {
+        backdrop.classList.remove('hidden');
+        backdrop.classList.remove('pointer-events-none');
+      }
+    });
+
+    observer.observe(drawer, { attributes: true, attributeFilter: ['class'] });
+  </script>
+</div></main></div></body></html>
