@@ -72,7 +72,6 @@ odoo-FLUX/
 │   │   ├── layouts/            # AuthLayout & DashboardLayout (role-aware navigation)
 │   │   ├── routes/             # AppRoutes with RBAC route protection
 │   │   ├── services/           # Axios API services for auth, staff, customer, admin
-│   │   ├── styles/             # Global design tokens and Tailwind stylesheets (globals.css)
 │   │   ├── types/              # TypeScript models and payloads
 │   │   ├── utils/              # Formatting helpers (INR currency, dates, truncators)
 │   │   ├── App.tsx
