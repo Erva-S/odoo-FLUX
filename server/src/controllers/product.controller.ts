@@ -13,7 +13,7 @@ import {
 export async function listProducts(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
     const query = queryProductSchema.parse(req.query);
-    const result = await productService.listProducts(query);
+    const result = await productService.listProducts(query, req.user?.role);
     return res.status(200).json({
       success: true,
       data: result,
@@ -25,7 +25,7 @@ export async function listProducts(req: AuthenticatedRequest, res: Response, nex
 
 export async function getProduct(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
-    const product = await productService.getProductById(req.params.id);
+    const product = await productService.getProductById(req.params.id, req.user?.role);
     return res.status(200).json({
       success: true,
       data: product,
@@ -92,6 +92,18 @@ export async function deleteProduct(req: AuthenticatedRequest, res: Response, ne
 // ==========================================
 // Product Variants
 // ==========================================
+
+export async function getVariant(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const variant = await productService.getVariantById(req.params.id);
+    return res.status(200).json({
+      success: true,
+      data: variant,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
 
 export async function listVariants(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {

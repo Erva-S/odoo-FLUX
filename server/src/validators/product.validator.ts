@@ -7,6 +7,10 @@ export const createProductSchema = z.object({
     .min(2, 'Product code must have at least 2 characters')
     .max(50)
     .regex(/^[A-Za-z0-9_-]+$/, 'Product code must only contain letters, numbers, hyphens, and underscores'),
+  type: z.string().min(1).max(100).default('Software'),
+  salesPrice: z.coerce.number().min(0, 'Sales price must be non-negative').default(0),
+  costPrice: z.coerce.number().min(0, 'Cost price must be non-negative').default(0),
+  notes: z.string().max(2000).optional().nullable(),
   description: z.string().max(1000).optional().nullable(),
   category: z.string().min(2).max(100).default('Core SaaS'),
   status: z.enum(['ACTIVE', 'INACTIVE', 'ARCHIVED']).default('ACTIVE'),
@@ -16,7 +20,9 @@ export const createProductSchema = z.object({
         name: z.string().min(2),
         code: z.string().min(2).max(50),
         description: z.string().max(500).optional().nullable(),
-        price: z.coerce.number().min(0, 'Price must be non-negative'),
+        additionalPrice: z.coerce.number().min(0, 'Additional price must be non-negative').default(0),
+        price: z.coerce.number().min(0).optional(),
+        attributes: z.record(z.any()).optional().nullable(),
         status: z.enum(['ACTIVE', 'INACTIVE', 'ARCHIVED']).default('ACTIVE'),
       })
     )
@@ -31,6 +37,10 @@ export const updateProductSchema = z.object({
     .max(50)
     .regex(/^[A-Za-z0-9_-]+$/)
     .optional(),
+  type: z.string().min(1).max(100).optional(),
+  salesPrice: z.coerce.number().min(0).optional(),
+  costPrice: z.coerce.number().min(0).optional(),
+  notes: z.string().max(2000).optional().nullable(),
   description: z.string().max(1000).optional().nullable(),
   category: z.string().min(2).max(100).optional(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'ARCHIVED']).optional(),
@@ -48,7 +58,9 @@ export const createVariantSchema = z.object({
     .max(50)
     .regex(/^[A-Za-z0-9_-]+$/, 'Variant code must only contain letters, numbers, hyphens, and underscores'),
   description: z.string().max(500).optional().nullable(),
-  price: z.coerce.number().min(0, 'Price must be non-negative'),
+  additionalPrice: z.coerce.number().min(0, 'Additional price must be non-negative').default(0),
+  price: z.coerce.number().min(0).optional(),
+  attributes: z.record(z.any()).optional().nullable(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'ARCHIVED']).default('ACTIVE'),
 });
 
@@ -61,7 +73,9 @@ export const updateVariantSchema = z.object({
     .regex(/^[A-Za-z0-9_-]+$/)
     .optional(),
   description: z.string().max(500).optional().nullable(),
+  additionalPrice: z.coerce.number().min(0).optional(),
   price: z.coerce.number().min(0).optional(),
+  attributes: z.record(z.any()).optional().nullable(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'ARCHIVED']).optional(),
 });
 

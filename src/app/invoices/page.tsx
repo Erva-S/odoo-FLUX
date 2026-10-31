@@ -101,11 +101,10 @@ function InvoicesContent() {
                   setStatusFilter(st);
                   setPage(1);
                 }}
-                className={`px-3 py-1 text-xs font-bold rounded-full border-2 border-black transition-colors ${
-                  statusFilter === st
-                    ? "bg-neoYellow text-black font-extrabold shadow-[2px_2px_0_0_#000]"
-                    : "bg-white text-neutral-700 hover:bg-neutral-100"
-                }`}
+                className={`px-3 py-1 text-xs font-bold rounded-full border-2 border-black transition-colors ${statusFilter === st
+                  ? "bg-neoYellow text-black font-extrabold shadow-[2px_2px_0_0_#000]"
+                  : "bg-white text-neutral-700 hover:bg-neutral-100"
+                  }`}
               >
                 {st.toUpperCase()}
               </button>

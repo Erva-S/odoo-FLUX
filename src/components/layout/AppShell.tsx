@@ -198,33 +198,6 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-[10px] uppercase font-bold text-neutral-500 px-2 pt-1">
-                    Quick Role Switch
-                  </p>
-                  <button
-                    onClick={() => switchDemoRole("admin")}
-                    className="w-full text-left px-2.5 py-1.5 text-xs font-bold hover:bg-neoYellow rounded-[6px] flex items-center justify-between"
-                  >
-                    <span>Switch to Admin</span>
-                    {role === "admin" && <span className="text-[10px] font-mono font-bold text-black">ACTIVE</span>}
-                  </button>
-                  <button
-                    onClick={() => switchDemoRole("staff")}
-                    className="w-full text-left px-2.5 py-1.5 text-xs font-bold hover:bg-neoYellow rounded-[6px] flex items-center justify-between"
-                  >
-                    <span>Switch to Staff</span>
-                    {role === "staff" && <span className="text-[10px] font-mono font-bold text-black">ACTIVE</span>}
-                  </button>
-                  <button
-                    onClick={() => switchDemoRole("customer")}
-                    className="w-full text-left px-2.5 py-1.5 text-xs font-bold hover:bg-neoYellow rounded-[6px] flex items-center justify-between"
-                  >
-                    <span>Customer Portal</span>
-                    {role === "customer" && <span className="text-[10px] font-mono font-bold text-black">ACTIVE</span>}
-                  </button>
-                </div>
-
                 <div className="border-t-2 border-neoDivider pt-1">
                   <button
                     onClick={logout}
