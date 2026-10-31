@@ -50,31 +50,49 @@ async function main() {
 
   const processes = [];
 
-  // 1. Check / Start PostgreSQL
+  // 1. Check / Start PostgreSQL dedicated cluster on port 5433
   const is5433Open = await isPortOpen(5433);
-  const is5432Open = await isPortOpen(5432);
 
-  if (is5433Open || is5432Open) {
-    const activePort = is5433Open ? 5433 : 5432;
-    console.log(`\x1b[32m[db]\x1b[0m PostgreSQL is listening on port ${activePort}`);
+  if (is5433Open) {
+    console.log(`\x1b[32m[db]\x1b[0m PostgreSQL is listening on port 5433`);
   } else {
-    // Attempt to start local postgres cluster if present on Windows
+    // Attempt to start local postgres cluster on port 5433
     const localAppData = process.env.LOCALAPPDATA || '';
     const pgDataDir = path.join(localAppData, 'subscriptly_db');
     const pgExe = 'C:\\Program Files\\PostgreSQL\\18\\bin\\postgres.exe';
 
     if (fs.existsSync(pgDataDir) && fs.existsSync(pgExe)) {
-      console.log('\x1b[32m[db]\x1b[0m Starting local PostgreSQL service on port 5433...');
-      const pgProc = spawn(pgExe, ['-D', pgDataDir, '-p', '5433'], {
-        stdio: 'ignore',
+      // Check for stale postmaster.pid
+      const pidFile = path.join(pgDataDir, 'postmaster.pid');
+      if (fs.existsSync(pidFile)) {
+        try {
+          const pidText = fs.readFileSync(pidFile, 'utf8').split('\n')[0].trim();
+          const pid = parseInt(pidText, 10);
+          let alive = false;
+          try {
+            process.kill(pid, 0);
+            alive = true;
+          } catch {
+            alive = false;
+          }
+          if (!alive) {
+            fs.unlinkSync(pidFile);
+          }
+        } catch {}
+      }
+
+      console.log('\x1b[32m[db]\x1b[0m Starting local Subscriptly PostgreSQL service on port 5433...');
+      const pgProc = spawn(pgExe, ['-D', pgDataDir, '-p', '5433', '-h', '127.0.0.1,localhost'], {
+        stdio: ['ignore', 'pipe', 'pipe'],
         detached: false,
       });
       processes.push(pgProc);
+      pipeOutput(pgProc.stderr, '[db log]', '33');
 
       // Wait a moment for startup
       let ready = false;
-      for (let i = 0; i < 10; i++) {
-        await new Promise((r) => setTimeout(r, 500));
+      for (let i = 0; i < 15; i++) {
+        await new Promise((r) => setTimeout(r, 400));
         if (await isPortOpen(5433)) {
           ready = true;
           break;
@@ -83,7 +101,7 @@ async function main() {
       if (ready) {
         console.log('\x1b[32m[db]\x1b[0m Local PostgreSQL ready on port 5433.');
       } else {
-        console.warn('\x1b[33m[db]\x1b[0m PostgreSQL starting in background.');
+        console.warn('\x1b[33m[db]\x1b[0m PostgreSQL starting in background on port 5433.');
       }
     } else {
       console.log('\x1b[33m[db]\x1b[0m External PostgreSQL expected on configured DATABASE_URL.');
