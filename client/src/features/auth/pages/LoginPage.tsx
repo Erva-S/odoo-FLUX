@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext.js';
+import { supabase, isSupabaseConfigured } from '../../../lib/supabase.js';
 import { extractErrorMessage } from '../../../services/api.js';
 import { Logo } from '../../../components/common/Logo.js';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
@@ -42,7 +43,29 @@ export function LoginPage() {
     setLoading(true);
 
     try {
+      // 1. Authenticate with Subscriptly backend (verifies credentials against PostgreSQL & sets auth cookie)
       const user = await login({ email, password, rememberMe });
+
+      // 2. Sync / establish Supabase Auth session if configured
+      if (isSupabaseConfigured()) {
+        try {
+          const { error: supaErr } = await supabase.auth.signInWithPassword({
+            email: email.trim().toLowerCase(),
+            password,
+          });
+          if (supaErr && supaErr.message.includes('Invalid login credentials')) {
+            // If user exists in local PostgreSQL but not in Supabase Auth yet, seed them
+            await supabase.auth.signUp({
+              email: email.trim().toLowerCase(),
+              password,
+              options: { data: { name: user.name } },
+            });
+          }
+        } catch (supaErr) {
+          console.warn('Supabase Auth login sync note:', supaErr);
+        }
+      }
+
       if (user.role === 'ADMIN') {
         navigate('/admin');
       } else if (user.role === 'STAFF') {

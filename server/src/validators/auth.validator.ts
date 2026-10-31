@@ -10,6 +10,7 @@ const passwordSchema = z
 export const registerSchema = z
   .object({
     name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name cannot exceed 100 characters').trim(),
+    businessName: z.string().max(100, 'Business name cannot exceed 100 characters').trim().optional().or(z.literal('')),
     email: z.string().email('Please enter a valid email address').toLowerCase().trim(),
     password: passwordSchema,
     confirmPassword: z.string(),

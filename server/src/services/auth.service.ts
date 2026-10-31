@@ -29,7 +29,9 @@ export async function registerCustomer(input: RegisterInput) {
         isActive: true,
         emailVerified: false,
         customer: {
-          create: {},
+          create: {
+            companyName: input.businessName || null,
+          },
         },
       },
       select: {
