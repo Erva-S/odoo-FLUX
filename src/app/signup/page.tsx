@@ -27,14 +27,14 @@ export default function SignupPage() {
   const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
   const isPasswordValid = hasLength && hasUppercase && hasLowercase && hasSpecial;
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isPasswordValid) {
       error("Please fulfill all password security rules.");
       return;
     }
 
-    const res = signup({ email, name, companyName });
+    const res = await signup({ email, password, name, companyName });
     if (!res.success) {
       error(res.error || "Failed to create account.");
       return;
