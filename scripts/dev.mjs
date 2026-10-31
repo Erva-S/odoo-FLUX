@@ -91,7 +91,7 @@ async function main() {
     for (const proc of processes) {
       try {
         proc.kill();
-      } catch {}
+      } catch { }
     }
     process.exit(0);
   };

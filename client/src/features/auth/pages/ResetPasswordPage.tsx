@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { completePasswordReset } from '../../services/auth.service.js';
-import { extractErrorMessage } from '../../services/api.js';
-import { Logo } from '../../components/common/Logo.js';
+import { completePasswordReset } from '../../../services/auth.service.js';
+import { extractErrorMessage } from '../../../services/api.js';
+import { Logo } from '../../../components/common/Logo.js';
 import { Lock, Eye, EyeOff, Check, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 export function ResetPasswordPage() {

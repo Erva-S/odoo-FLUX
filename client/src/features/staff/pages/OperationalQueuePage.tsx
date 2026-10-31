@@ -10,9 +10,9 @@ import {
   ShieldAlert,
   Search,
 } from 'lucide-react';
-import { Badge } from '../../components/ui/Badge.js';
-import { Button } from '../../components/ui/Button.js';
-import { Card } from '../../components/ui/Card.js';
+import { Badge } from '../../../components/ui/Badge.js';
+import { Button } from '../../../components/ui/Button.js';
+import { Card } from '../../../components/ui/Card.js';
 
 interface OperationalTask {
   id: string;

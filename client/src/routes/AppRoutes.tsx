@@ -7,22 +7,26 @@ import { Role } from '../types/auth.js';
 import { AuthLayout } from '../layouts/AuthLayout.js';
 import { DashboardLayout } from '../layouts/DashboardLayout.js';
 
-// Auth Pages
-import { LoginPage } from '../pages/auth/LoginPage.js';
-import { RegisterPage } from '../pages/auth/RegisterPage.js';
-import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage.js';
-import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage.js';
+// Feature Pages - Auth
+import { LoginPage } from '../features/auth/pages/LoginPage.js';
+import { RegisterPage } from '../features/auth/pages/RegisterPage.js';
+import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage.js';
+import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage.js';
 
-// Admin Pages
-import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage.js';
-import { StaffManagementPage } from '../pages/admin/StaffManagementPage.js';
+// Feature Pages - Admin
+import { AdminDashboardPage } from '../features/admin/pages/AdminDashboardPage.js';
+import { StaffManagementPage } from '../features/admin/pages/StaffManagementPage.js';
+import { CustomerManagementPage } from '../features/admin/pages/CustomerManagementPage.js';
+import { ProductManagementPage } from '../features/admin/pages/ProductManagementPage.js';
+import { PlanConfigurationPage } from '../features/admin/pages/PlanConfigurationPage.js';
 
-// Staff Pages
-import { StaffDashboardPage } from '../pages/staff/StaffDashboardPage.js';
+// Feature Pages - Staff
+import { StaffDashboardPage } from '../features/staff/pages/StaffDashboardPage.js';
+import { OperationalQueuePage } from '../features/staff/pages/OperationalQueuePage.js';
 
-// Customer Pages
-import { CustomerPortalPage } from '../pages/customer/CustomerPortalPage.js';
-import { CustomerProfilePage } from '../pages/customer/CustomerProfilePage.js';
+// Feature Pages - Customer
+import { CustomerPortalPage } from '../features/customer/pages/CustomerPortalPage.js';
+import { CustomerProfilePage } from '../features/customer/pages/CustomerProfilePage.js';
 
 // Placeholders
 import { ComingSoon } from '../components/common/ComingSoon.js';
@@ -52,7 +56,7 @@ function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
     // Redirect unauthorized user to their proper dashboard
     if (role === 'ADMIN') return <Navigate to="/admin" replace />;
     if (role === 'STAFF') return <Navigate to="/staff" replace />;
-    return <Navigate to="/portal" replace />;
+    return <Navigate to="/customer" replace />;
   }
 
   return <>{children}</>;
@@ -72,7 +76,7 @@ function PublicAuthRoute({ children }: { children: React.ReactNode }) {
   if (isAuthenticated && role) {
     if (role === 'ADMIN') return <Navigate to="/admin" replace />;
     if (role === 'STAFF') return <Navigate to="/staff" replace />;
-    return <Navigate to="/portal" replace />;
+    return <Navigate to="/customer" replace />;
   }
 
   return <>{children}</>;
@@ -93,7 +97,7 @@ export function AppRoutes() {
             ) : role === 'STAFF' ? (
               <Navigate to="/staff" replace />
             ) : (
-              <Navigate to="/portal" replace />
+              <Navigate to="/customer" replace />
             )
           ) : (
             <Navigate to="/login" replace />
@@ -115,7 +119,7 @@ export function AppRoutes() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Route>
 
-      {/* Admin Routes */}
+      {/* Admin Feature Routes */}
       <Route
         path="/admin"
         element={
@@ -125,54 +129,85 @@ export function AppRoutes() {
         }
       >
         <Route index element={<AdminDashboardPage />} />
+        <Route path="customers" element={<CustomerManagementPage />} />
+        <Route path="products" element={<ProductManagementPage />} />
+        <Route path="plans" element={<PlanConfigurationPage />} />
         <Route path="staff" element={<StaffManagementPage />} />
         <Route
-          path="customers"
-          element={<ComingSoon moduleName="Customers & CRM" description="Centralized subscriber profiles, account health scores, contact directories, and customer lifecycle management." />}
-        />
-        <Route
-          path="products"
-          element={<ComingSoon moduleName="Products Catalog" description="Manage SaaS software offerings, add-on features, tiered SKUs, and usage-based meter configurations." />}
-        />
-        <Route
-          path="plans"
-          element={<ComingSoon moduleName="Plans & Pricing Tiers" description="Define recurring billing cycles (monthly, annual), trial periods, price overrides, and self-serve plans." />}
-        />
-        <Route
           path="quotations"
-          element={<ComingSoon moduleName="Quotations & Sales" description="Draft custom enterprise contract quotes, discount approvals, and digital sales sign-off workflows." />}
+          element={
+            <ComingSoon
+              moduleName="Quotations & Sales"
+              description="Draft custom enterprise contract quotes, discount approvals, and digital sales sign-off workflows."
+            />
+          }
         />
         <Route
           path="subscriptions"
-          element={<ComingSoon moduleName="Subscriptions & Lifecycles" description="Manage live recurring billing contracts, trial conversions, mid-cycle upgrades, pauses, and cancellations." />}
+          element={
+            <ComingSoon
+              moduleName="Subscriptions & Lifecycles"
+              description="Manage live recurring billing contracts, trial conversions, mid-cycle upgrades, pauses, and cancellations."
+            />
+          }
         />
         <Route
           path="invoices"
-          element={<ComingSoon moduleName="Invoicing & Dunning Engine" description="Automated GST/tax invoice generation, recurring PDF deliveries, and smart dunning retry sequences." />}
+          element={
+            <ComingSoon
+              moduleName="Invoicing & Dunning Engine"
+              description="Automated GST/tax invoice generation, recurring PDF deliveries, and smart dunning retry sequences."
+            />
+          }
         />
         <Route
           path="payments"
-          element={<ComingSoon moduleName="Payments & Settlements" description="Integrated payment gateway webhooks (Stripe, Razorpay, UPI), automated reconciliations, and chargeback tracking." />}
+          element={
+            <ComingSoon
+              moduleName="Payments & Settlements"
+              description="Integrated payment gateway webhooks (Stripe, Razorpay, UPI), automated reconciliations, and chargeback tracking."
+            />
+          }
         />
         <Route
           path="discounts"
-          element={<ComingSoon moduleName="Discounts & Promotions" description="Promotional coupon campaigns, percent/flat fee waivers, and limited-time referral incentives." />}
+          element={
+            <ComingSoon
+              moduleName="Discounts & Promotions"
+              description="Promotional coupon campaigns, percent/flat fee waivers, and limited-time referral incentives."
+            />
+          }
         />
         <Route
           path="taxes"
-          element={<ComingSoon moduleName="Tax & Compliance Rules" description="Multi-jurisdiction GST/VAT calculations, HSN/SAC code mappings, and tax exemption certificates." />}
+          element={
+            <ComingSoon
+              moduleName="Tax & Compliance Rules"
+              description="Multi-jurisdiction GST/VAT calculations, HSN/SAC code mappings, and tax exemption certificates."
+            />
+          }
         />
         <Route
           path="reports"
-          element={<ComingSoon moduleName="Financial Reports & Cohorts" description="MRR/ARR growth graphs, net revenue retention, cohort churn analysis, and revenue recognition reports." />}
+          element={
+            <ComingSoon
+              moduleName="Financial Reports & Cohorts"
+              description="MRR/ARR growth graphs, net revenue retention, cohort churn analysis, and revenue recognition reports."
+            />
+          }
         />
         <Route
           path="settings"
-          element={<ComingSoon moduleName="Workspace Settings" description="General billing defaults, currency formats, webhook endpoint keys, and organization branding." />}
+          element={
+            <ComingSoon
+              moduleName="Workspace Settings"
+              description="General billing defaults, currency formats, webhook endpoint keys, and organization branding."
+            />
+          }
         />
       </Route>
 
-      {/* Staff Routes */}
+      {/* Staff Feature Routes */}
       <Route
         path="/staff"
         element={
@@ -182,31 +217,49 @@ export function AppRoutes() {
         }
       >
         <Route index element={<StaffDashboardPage />} />
-        <Route
-          path="customers"
-          element={<ComingSoon moduleName="Customer Accounts Triage" description="Operational customer directory for support queries, account verification, and assistance." />}
-        />
+        <Route path="queue" element={<OperationalQueuePage />} />
+        <Route path="customers" element={<CustomerManagementPage />} />
         <Route
           path="quotations"
-          element={<ComingSoon moduleName="Quotations Review" description="Prepare, review, and dispatch sales quotes to pending prospect inquiries." />}
+          element={
+            <ComingSoon
+              moduleName="Quotations Review"
+              description="Prepare, review, and dispatch sales quotes to pending prospect inquiries."
+            />
+          }
         />
         <Route
           path="subscriptions"
-          element={<ComingSoon moduleName="Subscription Queue" description="Review subscription change requests, grace periods, and renewal statuses." />}
+          element={
+            <ComingSoon
+              moduleName="Subscription Queue"
+              description="Review subscription change requests, grace periods, and renewal statuses."
+            />
+          }
         />
         <Route
           path="invoices"
-          element={<ComingSoon moduleName="Invoice Processing" description="Inspect invoice delivery receipts and handle billing clarification tickets." />}
+          element={
+            <ComingSoon
+              moduleName="Invoice Processing"
+              description="Inspect invoice delivery receipts and handle billing clarification tickets."
+            />
+          }
         />
         <Route
           path="payments"
-          element={<ComingSoon moduleName="Payment Operations" description="Check transaction failure codes and initiate manual retry requests." />}
+          element={
+            <ComingSoon
+              moduleName="Payment Operations"
+              description="Check transaction failure codes and initiate manual retry requests."
+            />
+          }
         />
       </Route>
 
-      {/* Customer Routes */}
+      {/* Customer Feature Routes (/customer/* and /portal/* support) */}
       <Route
-        path="/portal"
+        path="/customer"
         element={
           <ProtectedRoute allowedRoles={['CUSTOMER']}>
             <DashboardLayout />
@@ -217,17 +270,35 @@ export function AppRoutes() {
         <Route path="profile" element={<CustomerProfilePage />} />
         <Route
           path="subscriptions"
-          element={<ComingSoon moduleName="My Subscriptions" description="View active subscription plans, upgrade tiers, manage seats, and review upcoming renewal dates." />}
+          element={
+            <ComingSoon
+              moduleName="My Subscriptions"
+              description="View active subscription plans, upgrade tiers, manage seats, and review upcoming renewal dates."
+            />
+          }
         />
         <Route
           path="invoices"
-          element={<ComingSoon moduleName="My Invoices" description="Download official tax invoices, billing receipts, and itemized fee statements." />}
+          element={
+            <ComingSoon
+              moduleName="My Invoices"
+              description="Download official tax invoices, billing receipts, and itemized fee statements."
+            />
+          }
         />
         <Route
           path="payments"
-          element={<ComingSoon moduleName="Payment History" description="Manage saved payment cards, UPI mandates, and view recent transaction receipts." />}
+          element={
+            <ComingSoon
+              moduleName="Payment History"
+              description="Manage saved payment cards, UPI mandates, and view recent transaction receipts."
+            />
+          }
         />
       </Route>
+
+      {/* Legacy /portal compatibility route alias */}
+      <Route path="/portal/*" element={<Navigate to="/customer" replace />} />
 
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />

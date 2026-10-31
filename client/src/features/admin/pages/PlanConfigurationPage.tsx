@@ -15,10 +15,10 @@ import {
   ArrowRight,
   Settings2,
 } from 'lucide-react';
-import { Badge } from '../../components/ui/Badge.js';
-import { Button } from '../../components/ui/Button.js';
-import { Modal } from '../../components/ui/Modal.js';
-import { Input } from '../../components/ui/Input.js';
+import { Badge } from '../../../components/ui/Badge.js';
+import { Button } from '../../../components/ui/Button.js';
+import { Modal } from '../../../components/ui/Modal.js';
+import { Input } from '../../../components/ui/Input.js';
 
 interface PlanDefinition {
   id: string;

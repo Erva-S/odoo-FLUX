@@ -3,9 +3,9 @@ import {
   getStaffList,
   createStaffMember,
   toggleStaffStatus,
-} from '../../services/staff.service.js';
-import { StaffUser } from '../../types/staff.js';
-import { extractErrorMessage } from '../../services/api.js';
+} from '../../../services/staff.service.js';
+import { StaffUser } from '../../../types/staff.js';
+import { extractErrorMessage } from '../../../services/api.js';
 import {
   UserPlus,
   Search,

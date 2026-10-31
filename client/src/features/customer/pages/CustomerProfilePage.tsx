@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext.js';
-import { updateCustomerProfile } from '../../services/customer.service.js';
-import { extractErrorMessage } from '../../services/api.js';
+import { useAuth } from '../../../context/AuthContext.js';
+import { updateCustomerProfile } from '../../../services/customer.service.js';
+import { extractErrorMessage } from '../../../services/api.js';
 import {
   UserCircle,
   Building2,

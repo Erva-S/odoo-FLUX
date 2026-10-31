@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { requestPasswordReset } from '../../services/auth.service.js';
-import { extractErrorMessage } from '../../services/api.js';
-import { Logo } from '../../components/common/Logo.js';
+import { requestPasswordReset } from '../../../services/auth.service.js';
+import { extractErrorMessage } from '../../../services/api.js';
+import { Logo } from '../../../components/common/Logo.js';
 import { Mail, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 export function ForgotPasswordPage() {
