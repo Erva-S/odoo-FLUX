@@ -1,49 +1,88 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { NeoCard } from "@/components/ui/NeoCard";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { NeoInput } from "@/components/ui/NeoInput";
-import { dataStore } from "@/lib/data/store";
+import { Product, Plan, Profile } from "@/lib/data/types";
 import { useToast } from "@/components/ui/ToastContext";
-import { ArrowLeft, Plus, Trash2, CheckCircle2, Sparkles, Building, Layers } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, CheckCircle2, Sparkles, Building, Layers, Loader2 } from "lucide-react";
+import { getCustomersAction } from "@/app/actions/customers";
+import { getProductsAction, getPlansAction } from "@/app/actions/catalog";
+import { createSubscriptionAction } from "@/app/actions/subscriptions";
 
 export default function NewSubscriptionPage() {
   const router = useRouter();
   const { success, error } = useToast();
 
-  const [selectedCustomerId, setSelectedCustomerId] = useState(dataStore.customers[0]?.id || "");
-  const [selectedPlanId, setSelectedPlanId] = useState(dataStore.plans[0]?.id || "");
-  const [selectedDiscountId, setSelectedDiscountId] = useState("");
+  const [customers, setCustomers] = useState<Profile[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [selectedPlanId, setSelectedPlanId] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("Net 30");
 
   // Editable lines
   const [lines, setLines] = useState<
     { productId: string; variantId?: string; quantity: number }[]
-  >([
-    {
-      productId: dataStore.products[0]?.id || "prod-1",
-      variantId: "var-odoo", // Pre-selected Odoo brand variant (+560)
-      quantity: 1,
-    },
-  ]);
+  >([]);
 
-  // Load template helper
-  const handleApplyTemplate = (tmplId: string) => {
-    const tmpl = dataStore.templates.find((t) => t.id === tmplId);
-    if (!tmpl) return;
-    setSelectedPlanId(tmpl.planId);
-    setLines(tmpl.lines.map((l) => ({ ...l })));
-    success(`Applied template: ${tmpl.name}`);
-  };
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoadingInitial(true);
+        const [custRes, planRes, prodRes] = await Promise.all([
+          getCustomersAction({ pageSize: 100 }),
+          getPlansAction(),
+          getProductsAction(),
+        ]);
+
+        if (custRes.success && custRes.data?.customers) {
+          setCustomers(custRes.data.customers);
+          if (custRes.data.customers.length > 0) {
+            setSelectedCustomerId(custRes.data.customers[0].id);
+          }
+        }
+
+        if (planRes.success && planRes.data) {
+          setPlans(planRes.data);
+          if (planRes.data.length > 0) {
+            setSelectedPlanId(planRes.data[0].id);
+          }
+        }
+
+        if (prodRes.success && prodRes.data) {
+          setProducts(prodRes.data);
+          if (prodRes.data.length > 0) {
+            const firstProd = prodRes.data[0];
+            const odooVar = firstProd.variants.find((v) => v.attributeValue === "Odoo");
+            setLines([
+              {
+                productId: firstProd.id,
+                variantId: odooVar ? odooVar.id : firstProd.variants[0]?.id,
+                quantity: 1,
+              },
+            ]);
+          }
+        }
+      } catch (err: unknown) {
+        error("Error loading products and customers from PostgreSQL.");
+      } finally {
+        setLoadingInitial(false);
+      }
+    }
+    loadData();
+  }, [error]);
 
   // Calculations
   let subtotal = 0;
   const calculatedLines = lines.map((l) => {
-    const prod = dataStore.products.find((p) => p.id === l.productId) || dataStore.products[0];
+    const prod = products.find((p) => p.id === l.productId) || products[0];
     let unitPrice = prod ? prod.salesPrice : 0;
     let extra = 0;
     if (l.variantId && prod) {
@@ -51,7 +90,7 @@ export default function NewSubscriptionPage() {
       if (v) extra = v.priceExtra;
     }
     const finalUnitPrice = unitPrice + extra;
-    const amount = finalUnitPrice * l.quantity;
+    const amount = finalUnitPrice * (l.quantity || 1);
     subtotal += amount;
 
     return {
@@ -61,26 +100,15 @@ export default function NewSubscriptionPage() {
     };
   });
 
-  let discountAmount = 0;
-  if (selectedDiscountId) {
-    const disc = dataStore.discounts.find((d) => d.id === selectedDiscountId);
-    if (disc) {
-      discountAmount =
-        disc.type === "percentage"
-          ? Math.round(subtotal * (disc.value / 100) * 100) / 100
-          : disc.value;
-    }
-  }
-
-  const taxableBase = Math.max(0, subtotal - discountAmount);
-  const taxAmount = Math.round(taxableBase * 0.1 * 100) / 100;
-  const totalAmount = taxableBase + taxAmount;
+  const taxAmount = Math.round(subtotal * 0.1 * 100) / 100;
+  const totalAmount = subtotal + taxAmount;
 
   const handleAddLine = () => {
+    if (products.length === 0) return;
     setLines([
       ...lines,
       {
-        productId: dataStore.products[0]?.id || "prod-1",
+        productId: products[0].id,
         quantity: 1,
       },
     ]);
@@ -91,77 +119,90 @@ export default function NewSubscriptionPage() {
     setLines(lines.filter((_, i) => i !== idx));
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCustomerId || !selectedPlanId || lines.length === 0) {
       error("Please configure customer, plan, and at least one line item.");
       return;
     }
 
-    const sub = dataStore.createSubscription({
-      customerId: selectedCustomerId,
-      planId: selectedPlanId,
-      paymentTerms,
-      discountId: selectedDiscountId || undefined,
-      lines,
-    });
+    try {
+      setSubmitting(true);
+      const res = await createSubscriptionAction({
+        customerId: selectedCustomerId,
+        planId: selectedPlanId,
+        paymentTerms,
+        lines: lines.map((l) => ({
+          productId: l.productId,
+          variantId: l.variantId,
+          quantity: Number(l.quantity) || 1,
+        })),
+      });
 
-    success(`Subscription ${sub.subscriptionNumber} created successfully!`);
-    router.push(`/subscriptions/${sub.id}`);
+      if (!res.success || !res.data) {
+        error(res.error || "Failed to create subscription in PostgreSQL.");
+        return;
+      }
+
+      success(`Subscription ${res.data.subscriptionNumber} created successfully in draft stage.`);
+      router.push(`/subscriptions/${res.data.id}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error creating subscription";
+      error(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (loadingInitial) {
+    return (
+      <AppShell>
+        <div className="py-24 text-center space-y-3">
+          <Loader2 className="w-8 h-8 mx-auto animate-spin text-statusBlue" />
+          <p className="text-xs font-mono font-bold text-neutral-600 uppercase">
+            Loading Catalog & Customer Profiles from PostgreSQL...
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
       <div className="space-y-6 max-w-5xl mx-auto">
-        <div className="flex items-center gap-3">
-          <Link href="/subscriptions" className="p-2 border-2 border-black rounded-[8px] bg-white shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5">
+        {/* Header */}
+        <div className="flex items-center gap-3 border-b-2 border-black pb-4">
+          <Link
+            href="/subscriptions"
+            className="p-2 border-2 border-black rounded-[8px] bg-white shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5"
+          >
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
             <h1 className="text-3xl font-heading font-black tracking-tight text-neoBlack">
-              New Subscription / Quotation
+              New Subscription Contract
             </h1>
             <p className="text-xs text-neutral-600 font-bold">
-              Build from scratch or choose a preset quotation template.
+              Build a recurring contract with Phase 3A PostgreSQL catalog & attribute variants.
             </p>
           </div>
         </div>
 
-        {/* Template Quick Select */}
-        <div className="bg-neoYellow border-2 border-black rounded-[14px] p-5 shadow-neo space-y-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-black" />
-            <h2 className="font-heading font-black text-lg">Use Quotation Template</h2>
-          </div>
-          <p className="text-xs text-neutral-800 font-medium">
-            Quotation templates prefill plan terms, products, and variant lines so reps never start from scratch.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {dataStore.templates.map((tmpl) => (
-              <button
-                key={tmpl.id}
-                type="button"
-                onClick={() => handleApplyTemplate(tmpl.id)}
-                className="bg-white border-2 border-black rounded-[8px] px-3.5 py-2 text-xs font-bold shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5 transition-transform"
-              >
-                {tmpl.name} ({tmpl.validityDays} days validity)
-              </button>
-            ))}
-          </div>
-        </div>
-
         <form onSubmit={handleCreate} className="space-y-6">
-          {/* Section: Customer & Plan Details */}
-          <div className="bg-white border-2 border-black rounded-[14px] p-6 shadow-neo grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Main Attributes */}
+          <div className="bg-white border-2 border-black rounded-[14px] p-6 shadow-neo grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* Customer selector */}
             <div className="space-y-1.5 text-left">
-              <label className="block text-sm font-bold text-neoBlack">Customer / Account</label>
+              <label className="block text-sm font-bold text-neoBlack">
+                Customer Account <span className="text-statusRed">*</span>
+              </label>
               <select
                 value={selectedCustomerId}
                 onChange={(e) => setSelectedCustomerId(e.target.value)}
-                className="w-full bg-white border-2 border-black rounded-[8px] px-3.5 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full bg-neoCanvas border-2 border-black rounded-[8px] p-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-black"
                 required
               >
-                {dataStore.customers.map((c) => (
+                {customers.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.companyName || c.name} ({c.email})
                   </option>
@@ -169,57 +210,50 @@ export default function NewSubscriptionPage() {
               </select>
             </div>
 
+            {/* Plan selector */}
             <div className="space-y-1.5 text-left">
-              <label className="block text-sm font-bold text-neoBlack">Subscription Plan</label>
+              <label className="block text-sm font-bold text-neoBlack">
+                Recurring Plan <span className="text-statusRed">*</span>
+              </label>
               <select
                 value={selectedPlanId}
                 onChange={(e) => setSelectedPlanId(e.target.value)}
-                className="w-full bg-white border-2 border-black rounded-[8px] px-3.5 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full bg-neoCanvas border-2 border-black rounded-[8px] p-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-black"
                 required
               >
-                {dataStore.plans.map((p) => (
+                {plans.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} — ${p.price.toFixed(2)} / {p.billingPeriod}
+                    {p.name} — ${p.price}/{p.billingPeriod}
                   </option>
                 ))}
               </select>
             </div>
 
+            {/* Payment terms */}
             <div className="space-y-1.5 text-left">
               <label className="block text-sm font-bold text-neoBlack">Payment Terms</label>
               <select
                 value={paymentTerms}
                 onChange={(e) => setPaymentTerms(e.target.value)}
-                className="w-full bg-white border-2 border-black rounded-[8px] px-3.5 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full bg-neoCanvas border-2 border-black rounded-[8px] p-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-black"
               >
-                <option value="Immediate">Immediate upon receipt</option>
+                <option value="Immediate">Immediate on Invoice</option>
                 <option value="Net 15">Net 15 Days</option>
                 <option value="Net 30">Net 30 Days</option>
                 <option value="Net 60">Net 60 Days</option>
               </select>
             </div>
-
-            <div className="space-y-1.5 text-left">
-              <label className="block text-sm font-bold text-neoBlack">Promotional Discount</label>
-              <select
-                value={selectedDiscountId}
-                onChange={(e) => setSelectedDiscountId(e.target.value)}
-                className="w-full bg-white border-2 border-black rounded-[8px] px-3.5 py-2.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="">None (Standard Rate)</option>
-                {dataStore.discounts.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.code} — {d.name} ({d.type === "percentage" ? `${d.value}% off` : `$${d.value} fixed`})
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
-          {/* Section: Subscription Line Items */}
+          {/* Line items section */}
           <div className="bg-white border-2 border-black rounded-[14px] p-6 shadow-neo space-y-4">
             <div className="flex items-center justify-between border-b-2 border-neoDivider pb-3">
-              <h3 className="font-heading font-black text-xl">Line Items</h3>
+              <div>
+                <h3 className="font-heading font-black text-xl">Order Line Items</h3>
+                <p className="text-xs text-neutral-600">
+                  Select software products and attribute variants (e.g. Odoo brand adds +$560.00).
+                </p>
+              </div>
               <NeoButton
                 type="button"
                 variant="secondary"
@@ -232,136 +266,156 @@ export default function NewSubscriptionPage() {
             </div>
 
             <div className="space-y-3">
-              {lines.map((line, idx) => {
-                const prod = dataStore.products.find((p) => p.id === line.productId);
+              {lines.map((l, idx) => {
+                const prod = products.find((p) => p.id === l.productId) || products[0];
                 const calc = calculatedLines[idx];
 
                 return (
                   <div
                     key={idx}
-                    className="p-4 bg-neoCanvas border-2 border-black rounded-[10px] grid grid-cols-1 sm:grid-cols-12 gap-3 items-end"
+                    className="p-3 bg-neoCanvas border-2 border-black rounded-[8px] grid grid-cols-1 sm:grid-cols-12 gap-3 items-center"
                   >
                     {/* Product */}
-                    <div className="sm:col-span-4 space-y-1">
-                      <label className="text-xs font-bold text-neutral-700">Product</label>
-                      <select
-                        value={line.productId}
-                        onChange={(e) => {
-                          const newProductId = e.target.value;
-                          setLines(
-                            lines.map((l, i) =>
-                              i === idx
-                                ? { ...l, productId: newProductId, variantId: undefined }
-                                : l
-                            )
-                          );
-                        }}
-                        className="w-full bg-white border-2 border-black rounded-[8px] p-2 text-xs font-bold"
-                      >
-                        {dataStore.products.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name} (${p.salesPrice})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Variant (e.g. Brand = Odoo +560) */}
-                    <div className="sm:col-span-4 space-y-1">
-                      <label className="text-xs font-bold text-neutral-700">
-                        Attribute Variant (Addon)
+                    <div className="sm:col-span-5">
+                      <label className="block text-[10px] uppercase font-bold text-neutral-500 mb-1">
+                        Product
                       </label>
                       <select
-                        value={line.variantId || ""}
+                        value={l.productId}
                         onChange={(e) => {
-                          const newVarId = e.target.value || undefined;
+                          const newProdId = e.target.value;
+                          const targetProd = products.find((p) => p.id === newProdId);
                           setLines(
-                            lines.map((l, i) =>
-                              i === idx ? { ...l, variantId: newVarId } : l
+                            lines.map((item, i) =>
+                              i === idx
+                                ? {
+                                    ...item,
+                                    productId: newProdId,
+                                    variantId: targetProd?.variants[0]?.id || undefined,
+                                  }
+                                : item
                             )
                           );
                         }}
-                        className="w-full bg-white border-2 border-black rounded-[8px] p-2 text-xs font-bold"
+                        className="w-full bg-white border-2 border-black rounded-[6px] p-2 text-xs font-bold"
                       >
-                        <option value="">Base Configuration (+$0)</option>
-                        {prod?.variants.map((v) => (
-                          <option key={v.id} value={v.id}>
-                            {v.attributeName}: {v.attributeValue} (+${v.priceExtra})
+                        {products.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} (${p.salesPrice.toFixed(2)})
                           </option>
                         ))}
                       </select>
                     </div>
 
-                    {/* Quantity */}
-                    <div className="sm:col-span-2 space-y-1">
-                      <label className="text-xs font-bold text-neutral-700">Quantity</label>
+                    {/* Variant */}
+                    <div className="sm:col-span-4">
+                      <label className="block text-[10px] uppercase font-bold text-neutral-500 mb-1">
+                        Variant / Addon
+                      </label>
+                      <select
+                        value={l.variantId || ""}
+                        onChange={(e) => {
+                          const vId = e.target.value || undefined;
+                          setLines(
+                            lines.map((item, i) =>
+                              i === idx ? { ...item, variantId: vId } : item
+                            )
+                          );
+                        }}
+                        className="w-full bg-white border-2 border-black rounded-[6px] p-2 text-xs font-bold"
+                      >
+                        <option value="">Base Product (+$0.00)</option>
+                        {prod?.variants.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.attributeName}: {v.attributeValue} (+${v.priceExtra.toFixed(2)})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Qty */}
+                    <div className="sm:col-span-1">
+                      <label className="block text-[10px] uppercase font-bold text-neutral-500 mb-1">
+                        Qty
+                      </label>
                       <input
                         type="number"
                         min="1"
-                        value={line.quantity}
+                        value={l.quantity}
                         onChange={(e) => {
-                          const val = parseInt(e.target.value) || 1;
-                          setLines(lines.map((l, i) => (i === idx ? { ...l, quantity: val } : l)));
+                          const q = parseInt(e.target.value) || 1;
+                          setLines(
+                            lines.map((item, i) => (i === idx ? { ...item, quantity: q } : item))
+                          );
                         }}
-                        className="w-full bg-white border-2 border-black rounded-[8px] p-2 text-xs font-bold tnum"
+                        className="w-full bg-white border-2 border-black rounded-[6px] p-2 text-xs font-bold text-center"
                       />
                     </div>
 
-                    {/* Total & Delete */}
-                    <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-3">
-                      <div className="text-right">
-                        <span className="text-[10px] uppercase font-bold text-neutral-500 block">Total</span>
-                        <span className="font-mono font-bold text-sm">
-                          ${calc?.amount.toFixed(2)}
-                        </span>
-                      </div>
-                      {lines.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveLine(idx)}
-                          className="p-1.5 text-statusRed hover:bg-red-50 rounded border border-black"
-                          aria-label="Remove item"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                    {/* Amount */}
+                    <div className="sm:col-span-1 text-right">
+                      <label className="block text-[10px] uppercase font-bold text-neutral-500 mb-1">
+                        Amount
+                      </label>
+                      <span className="font-mono font-bold text-xs block pt-1.5">
+                        ${calc ? calc.amount.toFixed(2) : "0.00"}
+                      </span>
+                    </div>
+
+                    {/* Remove */}
+                    <div className="sm:col-span-1 text-right pt-4 sm:pt-0">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLine(idx)}
+                        disabled={lines.length === 1}
+                        className="p-1.5 text-statusRed hover:bg-red-50 rounded border border-black disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Remove line"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* Calculations Summary */}
-            <div className="border-t-2 border-neoDivider pt-4 flex flex-col items-end space-y-1.5 text-sm">
-              <div className="flex justify-between w-64 text-neutral-600">
-                <span>Subtotal:</span>
-                <span className="font-mono font-bold">${subtotal.toFixed(2)}</span>
+            {/* Totals Box */}
+            <div className="pt-4 border-t-2 border-black flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="text-xs text-neutral-600 font-medium">
+                Standard 10% VAT computed automatically upon submission.
               </div>
-              {discountAmount > 0 && (
-                <div className="flex justify-between w-64 text-statusGreen font-bold">
-                  <span>Discount Applied:</span>
-                  <span className="font-mono">-${discountAmount.toFixed(2)}</span>
+
+              <div className="w-full sm:w-72 bg-neoCanvas border-2 border-black rounded-[8px] p-3 space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-neutral-600">Subtotal:</span>
+                  <span className="font-mono font-bold">${subtotal.toFixed(2)}</span>
                 </div>
-              )}
-              <div className="flex justify-between w-64 text-neutral-600">
-                <span>Standard VAT (10%):</span>
-                <span className="font-mono font-bold">${taxAmount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between w-64 text-base font-extrabold text-black border-t-2 border-black pt-2">
-                <span>Total Amount:</span>
-                <span className="font-mono font-black">${totalAmount.toFixed(2)}</span>
+                <div className="flex justify-between">
+                  <span className="text-neutral-600">Tax (10% VAT):</span>
+                  <span className="font-mono font-bold">${taxAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between border-t-2 border-black pt-1 font-black text-sm">
+                  <span>Grand Total:</span>
+                  <span className="font-mono font-black">${totalAmount.toFixed(2)}</span>
+                </div>
               </div>
             </div>
           </div>
 
+          {/* Submit bar */}
           <div className="flex justify-end gap-3">
             <Link href="/subscriptions">
-              <NeoButton type="button" variant="secondary">
+              <NeoButton type="button" variant="secondary" disabled={submitting}>
                 Cancel
               </NeoButton>
             </Link>
-            <NeoButton type="submit" variant="primary" icon={<CheckCircle2 className="w-4 h-4" />}>
-              Create Subscription Quotation
+            <NeoButton
+              type="submit"
+              variant="primary"
+              disabled={submitting}
+              icon={submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            >
+              {submitting ? "Saving to PostgreSQL..." : "Save Draft Contract"}
             </NeoButton>
           </div>
         </form>
@@ -369,4 +423,3 @@ export default function NewSubscriptionPage() {
     </AppShell>
   );
 }
-

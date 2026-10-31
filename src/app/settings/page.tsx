@@ -21,11 +21,11 @@ export default function SettingsPage() {
   const [taxName, setTaxName] = useState("");
   const [taxRate, setTaxRate] = useState("");
 
-  const handleAddStaff = (e: React.FormEvent) => {
+  const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!staffName || !staffEmail) return;
 
-    const res = createStaffAccount({ name: staffName, email: staffEmail });
+    const res = await createStaffAccount({ name: staffName, email: staffEmail });
     if (!res.success) {
       error(res.error || "Failed to create staff account.");
       return;

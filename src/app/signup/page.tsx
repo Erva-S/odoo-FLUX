@@ -36,7 +36,15 @@ export default function SignupPage() {
       return;
     }
 
+<<<<<<< HEAD
     setLoading(true);
+=======
+    const res = await signup({ email, password, name, companyName });
+    if (!res.success) {
+      error(res.error || "Failed to create account.");
+      return;
+    }
+>>>>>>> main
 
     try {
       // 1. Supabase Auth registration

@@ -482,6 +482,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      subscription_history: {
+        Row: {
+          id: string;
+          subscription_id: string;
+          from_status: SubscriptionStatus;
+          to_status: SubscriptionStatus;
+          changed_by: string | null;
+          actor_email: string | null;
+          reason: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          subscription_id: string;
+          from_status: SubscriptionStatus;
+          to_status: SubscriptionStatus;
+          changed_by?: string | null;
+          actor_email?: string | null;
+          reason?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          subscription_id?: string;
+          from_status?: SubscriptionStatus;
+          to_status?: SubscriptionStatus;
+          changed_by?: string | null;
+          actor_email?: string | null;
+          reason?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       discount_usages: {
         Row: {
           id: string;

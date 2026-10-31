@@ -1,3 +1,5 @@
+export type SubscriptionStatus = "draft" | "quotation" | "confirmed" | "active" | "closed";
+
 export interface Profile {
   id: string;
   email: string;
@@ -85,7 +87,7 @@ export interface Subscription {
   customerEmail: string;
   planId: string;
   planName: string;
-  status: "draft" | "quotation" | "confirmed" | "active" | "closed";
+  status: SubscriptionStatus;
   startDate: string;
   expiryDate?: string;
   paymentTerms: string;
