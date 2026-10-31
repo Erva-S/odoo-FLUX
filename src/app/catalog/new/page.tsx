@@ -4,12 +4,11 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { NeoCard } from "@/components/ui/NeoCard";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { NeoInput } from "@/components/ui/NeoInput";
-import { dataStore } from "@/lib/data/store";
 import { useToast } from "@/components/ui/ToastContext";
-import { ArrowLeft, Plus, CheckCircle2, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, CheckCircle2, Trash2, Loader2 } from "lucide-react";
+import { createProductAction } from "@/app/actions/catalog";
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -19,6 +18,7 @@ export default function NewProductPage() {
   const [salesPrice, setSalesPrice] = useState("");
   const [costPrice, setCostPrice] = useState("");
   const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Variants list
   const [variants, setVariants] = useState<
@@ -38,29 +38,55 @@ export default function NewProductPage() {
     setVariants(variants.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      error("Product name must be at least 2 characters.");
+      return;
+    }
+
     const priceNum = parseFloat(salesPrice);
     if (isNaN(priceNum) || priceNum <= 0) {
       error("Sales price must be a positive number.");
       return;
     }
 
-    const newProd = dataStore.addProduct({
-      name,
-      type: "service",
-      salesPrice: priceNum,
-      costPrice: parseFloat(costPrice) || 0,
-      notes,
-      variants: variants.map((v, i) => ({
-        id: `var-new-${Date.now()}-${i}`,
-        productId: "",
-        ...v,
-      })),
-    });
+    const costNum = parseFloat(costPrice) || 0;
+    if (costNum < 0) {
+      error("Cost price cannot be negative.");
+      return;
+    }
 
-    success(`Product "${newProd.name}" added with ${variants.length} variant(s).`);
-    router.push("/catalog");
+    try {
+      setIsSubmitting(true);
+      const res = await createProductAction({
+        name: trimmedName,
+        type: "service",
+        salesPrice: priceNum,
+        costPrice: costNum,
+        notes: notes.trim() || undefined,
+        variants: variants.map((v) => ({
+          attributeName: v.attributeName.trim(),
+          attributeValue: v.attributeValue.trim(),
+          priceExtra: Number(v.priceExtra) || 0,
+        })),
+      });
+
+      if (!res.success) {
+        error(res.error || "Failed to create product in PostgreSQL.");
+        return;
+      }
+
+      success(`Product "${res.data?.name || trimmedName}" saved to PostgreSQL.`);
+      router.push("/catalog");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
+      error(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -69,7 +95,7 @@ export default function NewProductPage() {
         <div className="flex items-center gap-3 border-b-2 border-black pb-4">
           <Link
             href="/catalog"
-            className="p-2 border-2 border-black rounded-[8px] bg-white shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5"
+            className="p-2 border-2 border-black rounded-[8px] bg-white shadow-neo-sm hover:translate-x-0.5 hover:translate-y-0.5 transition-transform"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
@@ -78,7 +104,7 @@ export default function NewProductPage() {
               Add New Product & Variants
             </h1>
             <p className="text-xs text-neutral-600 font-bold">
-              Define base prices and attribute extras (e.g. Brand = Odoo adds $560).
+              Define base prices and attribute extras (e.g. Brand = Odoo adds $560) stored in PostgreSQL.
             </p>
           </div>
         </div>
@@ -206,7 +232,9 @@ export default function NewProductPage() {
                     <button
                       type="button"
                       onClick={() => handleRemoveVariant(idx)}
-                      className="p-1.5 text-statusRed hover:bg-red-50 rounded border border-black"
+                      disabled={variants.length <= 1}
+                      className="p-1.5 text-statusRed hover:bg-red-50 rounded border border-black disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Remove variant"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -218,12 +246,17 @@ export default function NewProductPage() {
 
           <div className="flex justify-end gap-3">
             <Link href="/catalog">
-              <NeoButton type="button" variant="secondary">
+              <NeoButton type="button" variant="secondary" disabled={isSubmitting}>
                 Cancel
               </NeoButton>
             </Link>
-            <NeoButton type="submit" variant="primary" icon={<CheckCircle2 className="w-4 h-4" />}>
-              Save Product & Variants
+            <NeoButton
+              type="submit"
+              variant="primary"
+              disabled={isSubmitting}
+              icon={isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            >
+              {isSubmitting ? "Saving to Database..." : "Save Product & Variants"}
             </NeoButton>
           </div>
         </form>
@@ -231,4 +264,3 @@ export default function NewProductPage() {
     </AppShell>
   );
 }
-

@@ -31,5 +31,9 @@ Thumbs.db
 *.sqlite3
 pgdata/
 
-.next
+# Next.js
+.next/
+tsconfig.tsbuildinfo
 
+# Sensitive MCP configuration
+.mcp.json
