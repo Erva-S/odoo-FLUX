@@ -44,17 +44,20 @@ function SubscriptionsListContent() {
           setTotal(res.data.total);
           setTotalPages(res.data.totalPages);
         } else {
-          error(res.error || "Failed to load subscriptions from PostgreSQL.");
+          setSubscriptions([]);
+          setTotal(0);
+          setTotalPages(1);
         }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Database load error";
-        error(msg);
+      } catch {
+        setSubscriptions([]);
+        setTotal(0);
+        setTotalPages(1);
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [searchTerm, statusFilter, page, error]
+    [searchTerm, statusFilter, page]
   );
 
   useEffect(() => {
@@ -156,7 +159,7 @@ function SubscriptionsListContent() {
             <Layers className="w-12 h-12 mx-auto text-neutral-400 stroke-1" />
             <h3 className="font-heading font-black text-xl">No Subscriptions Found</h3>
             <p className="text-xs text-neutral-600 max-w-md mx-auto">
-              No matching contracts were found in your PostgreSQL database for this search criteria.
+              No matching contracts were found for this search criteria. Click below to create a new subscription.
             </p>
             <Link href="/subscriptions/new">
               <NeoButton variant="primary" icon={<Plus className="w-4 h-4" />}>

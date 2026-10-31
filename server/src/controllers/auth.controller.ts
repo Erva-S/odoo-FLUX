@@ -55,7 +55,8 @@ export async function logout(_req: Request, res: Response) {
 
 export async function forgotPassword(req: Request, res: Response, next: NextFunction) {
   try {
-    const result = await authService.forgotPassword(req.body.email);
+    const origin = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : undefined);
+    const result = await authService.forgotPassword(req.body.email, origin);
     return res.status(200).json(result);
   } catch (error) {
     return next(error);

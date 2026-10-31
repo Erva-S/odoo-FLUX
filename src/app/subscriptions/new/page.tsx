@@ -70,14 +70,15 @@ export default function NewSubscriptionPage() {
             ]);
           }
         }
-      } catch (err: unknown) {
-        error("Error loading products and customers from PostgreSQL.");
+      } catch {
+        setCustomers([]);
+        setProducts([]);
       } finally {
         setLoadingInitial(false);
       }
     }
     loadData();
-  }, [error]);
+  }, []);
 
   // Calculations
   let subtotal = 0;

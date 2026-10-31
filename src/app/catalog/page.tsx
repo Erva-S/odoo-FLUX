@@ -65,22 +65,22 @@ export default function CatalogPage() {
       if (prodRes.success && prodRes.data) {
         setProducts(prodRes.data);
       } else {
-        error(prodRes.error || "Failed to load products from database.");
+        setProducts([]);
       }
 
       if (planRes.success && planRes.data) {
         setPlans(planRes.data);
       } else {
-        error(planRes.error || "Failed to load plans from database.");
+        setPlans([]);
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error connecting to PostgreSQL database";
-      error(msg);
+    } catch {
+      setProducts([]);
+      setPlans([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [error]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -236,21 +236,19 @@ export default function CatalogPage() {
         <div className="flex items-center gap-3 border-b-2 border-black pb-3">
           <button
             onClick={() => setActiveTab("products")}
-            className={`px-4 py-2 text-sm font-bold rounded-[8px] border-2 border-black transition-colors ${
-              activeTab === "products"
+            className={`px-4 py-2 text-sm font-bold rounded-[8px] border-2 border-black transition-colors ${activeTab === "products"
                 ? "bg-neoYellow text-black shadow-neo-sm font-black"
                 : "bg-white text-neutral-600 hover:bg-neutral-100"
-            }`}
+              }`}
           >
             Products & Variants ({loading ? "..." : products.length})
           </button>
           <button
             onClick={() => setActiveTab("plans")}
-            className={`px-4 py-2 text-sm font-bold rounded-[8px] border-2 border-black transition-colors ${
-              activeTab === "plans"
+            className={`px-4 py-2 text-sm font-bold rounded-[8px] border-2 border-black transition-colors ${activeTab === "plans"
                 ? "bg-neoYellow text-black shadow-neo-sm font-black"
                 : "bg-white text-neutral-600 hover:bg-neutral-100"
-            }`}
+              }`}
           >
             Subscription Plans ({loading ? "..." : plans.length})
           </button>
@@ -282,9 +280,9 @@ export default function CatalogPage() {
             {products.length === 0 ? (
               <div className="bg-white border-2 border-black rounded-[14px] p-12 shadow-neo text-center space-y-4">
                 <Layers className="w-12 h-12 mx-auto text-neutral-400 stroke-1" />
-                <h3 className="font-heading font-black text-xl">No products found in PostgreSQL</h3>
+                <h3 className="font-heading font-black text-xl">No products found</h3>
                 <p className="text-sm text-neutral-600 max-w-md mx-auto">
-                  Your PostgreSQL database currently has no products registered in the `products` table.
+                  No products have been added yet. Click &quot;Create First Product&quot; below to add one.
                 </p>
                 <Link href="/catalog/new">
                   <NeoButton variant="primary" icon={<Plus className="w-4 h-4" />}>
@@ -372,9 +370,9 @@ export default function CatalogPage() {
             {plans.length === 0 ? (
               <div className="bg-white border-2 border-black rounded-[14px] p-12 shadow-neo text-center space-y-4">
                 <Layers className="w-12 h-12 mx-auto text-neutral-400 stroke-1" />
-                <h3 className="font-heading font-black text-xl">No plans found in PostgreSQL</h3>
+                <h3 className="font-heading font-black text-xl">No plans found</h3>
                 <p className="text-sm text-neutral-600 max-w-md mx-auto">
-                  Your PostgreSQL database currently has no recurring plans in the `plans` table.
+                  No recurring plans configured yet.
                 </p>
               </div>
             ) : (

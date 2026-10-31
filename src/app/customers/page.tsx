@@ -66,17 +66,20 @@ export default function CustomersPage() {
           setTotal(res.data.total);
           setTotalPages(res.data.totalPages);
         } else {
-          error(res.error || "Failed to load customers from PostgreSQL.");
+          setCustomers([]);
+          setTotal(0);
+          setTotalPages(1);
         }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Database load error";
-        error(msg);
+      } catch {
+        setCustomers([]);
+        setTotal(0);
+        setTotalPages(1);
       } finally {
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [searchTerm, page, error]
+    [searchTerm, page]
   );
 
   useEffect(() => {
@@ -214,7 +217,7 @@ export default function CustomersPage() {
             <Users className="w-12 h-12 mx-auto text-neutral-400 stroke-1" />
             <h3 className="font-heading font-black text-xl">No Customer Records Found</h3>
             <p className="text-xs text-neutral-600 max-w-md mx-auto">
-              No matching customer accounts were returned from your PostgreSQL `profiles` table.
+              No matching customer accounts found. Click below to add a new customer.
             </p>
             <NeoButton variant="primary" onClick={() => setCreateModalOpen(true)} icon={<Plus className="w-4 h-4" />}>
               Add First Customer

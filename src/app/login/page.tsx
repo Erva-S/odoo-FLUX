@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Zap, Lock, Mail, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { Zap, Lock, Mail, ArrowRight, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { NeoInput } from "@/components/ui/NeoInput";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -12,17 +12,21 @@ import { UserRole } from "@/types/database.types";
 
 function LoginContent() {
   const router = useRouter();
-<<<<<<< HEAD
-  const { login } = useAuth();
-  const { success, error } = useToast();
+  const searchParams = useSearchParams();
+  const nextUrl = searchParams.get("next");
+  const authErrorParam = searchParams.get("error");
 
-  const [selectedRole, setSelectedRole] = useState<"admin" | "staff" | "customer">("admin");
+  const { login } = useAuth();
+  const { success, error: toastError } = useToast();
+
+  const [activeTab, setActiveTab] = useState<UserRole>("admin");
   const [email, setEmail] = useState("admin@brightloop.io");
   const [password, setPassword] = useState("Admin@Brightloop123!");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSelectRole = (role: "admin" | "staff" | "customer") => {
-    setSelectedRole(role);
+  const handleTabChange = (role: UserRole) => {
+    setActiveTab(role);
     if (role === "admin") {
       setEmail("admin@brightloop.io");
       setPassword("Admin@Brightloop123!");
@@ -34,33 +38,6 @@ function LoginContent() {
       setPassword("Customer@Brightloop123!");
     }
   };
-=======
-  const searchParams = useSearchParams();
-  const nextUrl = searchParams.get("next");
-  const authErrorParam = searchParams.get("error");
-
-  const { login } = useAuth();
-  const { success, error: toastError } = useToast();
-
-  const [activeTab, setActiveTab] = useState<UserRole>("admin");
-  const [email, setEmail] = useState("admin@brightloop.io");
-  const [password, setPassword] = useState("Bright@2026!");
-  const [loading, setLoading] = useState(false);
->>>>>>> main
-
-  const handleTabChange = (role: UserRole) => {
-    setActiveTab(role);
-    if (role === "admin") {
-      setEmail("admin@brightloop.io");
-      setPassword("Bright@2026!");
-    } else if (role === "staff") {
-      setEmail("staff@brightloop.io");
-      setPassword("Bright@2026!");
-    } else {
-      setEmail("customer@acme.corp");
-      setPassword("Bright@2026!");
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,14 +46,6 @@ function LoginContent() {
       return;
     }
 
-<<<<<<< HEAD
-    login(email, selectedRole);
-    success(`Welcome back! Signed in with ${selectedRole.toUpperCase()} credentials.`);
-    if (selectedRole === "customer" || email.includes("customer")) {
-      router.push("/portal");
-    } else {
-      router.push("/dashboard");
-=======
     try {
       setLoading(true);
       const res = await login(email, password, activeTab);
@@ -100,7 +69,6 @@ function LoginContent() {
       toastError(msg);
     } finally {
       setLoading(false);
->>>>>>> main
     }
   };
 
@@ -127,57 +95,8 @@ function LoginContent() {
           <h1 className="text-3xl font-heading font-black tracking-tight text-neoBlack">
             Sign In
           </h1>
-<<<<<<< HEAD
-          <p className="text-sm text-neutral-600 mt-1 font-medium">
-            Select your role and enter credentials to sign in.
-          </p>
-        </div>
-
-        {/* Role Selector */}
-        <div className="bg-neoCanvas border-2 border-black rounded-[10px] p-3 space-y-2">
-          <div className="text-xs uppercase font-extrabold text-neutral-600 tracking-wider flex items-center justify-between">
-            <span>Select Role</span>
-            <span className="text-[10px] font-mono font-bold text-black uppercase">
-              Current: {selectedRole}
-            </span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => handleSelectRole("admin")}
-              className={`px-2 py-2 text-xs font-bold border-2 border-black rounded-[8px] transition-all ${
-                selectedRole === "admin"
-                  ? "bg-neoYellow text-black shadow-neo-sm font-black translate-x-0.5 translate-y-0.5"
-                  : "bg-white text-neutral-700 hover:bg-neutral-100"
-              }`}
-            >
-              Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSelectRole("staff")}
-              className={`px-2 py-2 text-xs font-bold border-2 border-black rounded-[8px] transition-all ${
-                selectedRole === "staff"
-                  ? "bg-neoYellow text-black shadow-neo-sm font-black translate-x-0.5 translate-y-0.5"
-                  : "bg-white text-neutral-700 hover:bg-neutral-100"
-              }`}
-            >
-              Staff
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSelectRole("customer")}
-              className={`px-2 py-2 text-xs font-bold border-2 border-black rounded-[8px] transition-all ${
-                selectedRole === "customer"
-                  ? "bg-neoYellow text-black shadow-neo-sm font-black translate-x-0.5 translate-y-0.5"
-                  : "bg-white text-neutral-700 hover:bg-neutral-100"
-              }`}
-            >
-              Customer
-            </button>
-=======
           <p className="text-xs text-neutral-600 mt-1 font-bold">
-            Secure multi-role authentication powered by Supabase & PostgreSQL.
+            Select your role and enter credentials to sign in.
           </p>
         </div>
 
@@ -185,7 +104,6 @@ function LoginContent() {
           <div className="p-3 bg-red-100 border-2 border-black rounded-[8px] text-xs font-bold text-statusRed flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{decodeURIComponent(authErrorParam)}</span>
->>>>>>> main
           </div>
         )}
 
@@ -196,7 +114,7 @@ function LoginContent() {
             onClick={() => handleTabChange("admin")}
             className={`py-1.5 text-xs font-bold rounded-[6px] border border-black transition-all ${
               activeTab === "admin"
-                ? "bg-neoSage text-black font-black shadow-neo-sm"
+                ? "bg-neoYellow text-black font-black shadow-neo-sm translate-x-0.5 translate-y-0.5"
                 : "bg-white/60 text-neutral-600 hover:bg-white"
             }`}
           >
@@ -207,7 +125,7 @@ function LoginContent() {
             onClick={() => handleTabChange("staff")}
             className={`py-1.5 text-xs font-bold rounded-[6px] border border-black transition-all ${
               activeTab === "staff"
-                ? "bg-neoYellow text-black font-black shadow-neo-sm"
+                ? "bg-neoYellow text-black font-black shadow-neo-sm translate-x-0.5 translate-y-0.5"
                 : "bg-white/60 text-neutral-600 hover:bg-white"
             }`}
           >
@@ -218,7 +136,7 @@ function LoginContent() {
             onClick={() => handleTabChange("customer")}
             className={`py-1.5 text-xs font-bold rounded-[6px] border border-black transition-all ${
               activeTab === "customer"
-                ? "bg-neoDark text-white font-black shadow-neo-sm"
+                ? "bg-neoYellow text-black font-black shadow-neo-sm translate-x-0.5 translate-y-0.5"
                 : "bg-white/60 text-neutral-600 hover:bg-white"
             }`}
           >
@@ -228,8 +146,8 @@ function LoginContent() {
 
         {/* Role Hint Banner */}
         <div className="text-[11px] font-mono font-medium text-neutral-600 bg-neoCanvas/70 p-2 rounded-[6px] border border-black/20 flex items-center justify-between">
-          <span>Target Experience: <strong>{activeTab.toUpperCase()}</strong></span>
-          <span className="text-statusGreen font-bold">● Supabase Auth (Email & Password)</span>
+          <span>Target Role: <strong>{activeTab.toUpperCase()}</strong></span>
+          <span className="text-statusGreen font-bold">● Supabase Auth</span>
         </div>
 
         {/* Standard Credentials Form */}
@@ -253,13 +171,23 @@ function LoginContent() {
                 Forgot password?
               </Link>
             </div>
-            <NeoInput
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              leftIcon={<Lock className="w-4 h-4" />}
-              required
-            />
+            <div className="relative">
+              <NeoInput
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                leftIcon={<Lock className="w-4 h-4" />}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-black p-1"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <NeoButton

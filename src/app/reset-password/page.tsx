@@ -1,23 +1,26 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Zap, Lock, Check, X, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Zap, Lock, Mail, Check, X, ArrowRight, ArrowLeft, CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { NeoButton } from "@/components/ui/NeoButton";
 import { NeoInput } from "@/components/ui/NeoInput";
 import { useToast } from "@/components/ui/ToastContext";
 import { createClient } from "@/lib/supabase/client";
+import { resetPasswordDirectAction } from "@/app/actions/auth";
 import clsx from "clsx";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { success, error } = useToast();
 
-  const [hasValidSession, setHasValidSession] = useState<boolean>(false);
-  const [checkingSession, setCheckingSession] = useState<boolean>(true);
+  const [email, setEmail] = useState("");
+  const [localResetToken, setLocalResetToken] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isDone, setIsDone] = useState(false);
 
@@ -30,104 +33,65 @@ export default function ResetPasswordPage() {
   const isFormValid = hasLength && hasUppercase && hasLowercase && hasSpecial && passwordsMatch;
 
   useEffect(() => {
-    let mounted = true;
+    // 1. Extract query params if provided
+    const queryEmail = searchParams.get("email");
+    const queryToken = searchParams.get("token");
+    const queryCode = searchParams.get("code");
 
-    async function verifyRecoverySession() {
-      try {
-        const supabase = createClient();
+    if (queryEmail) setEmail(queryEmail);
+    if (queryToken) setLocalResetToken(queryToken);
 
-        // 1. Check for URL PKCE code
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get("code");
-        if (code) {
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          if (!exchangeError && data?.session) {
-            if (mounted) {
-              setHasValidSession(true);
-              setCheckingSession(false);
-            }
-            return;
-          }
-        }
-
-        // 2. Check existing Supabase session or hash fragments
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          if (mounted) {
-            setHasValidSession(true);
-            setCheckingSession(false);
-          }
-          return;
-        }
-
-        // 3. Check hash for type=recovery or access_token
-        const hash = window.location.hash;
-        if (hash && (hash.includes("type=recovery") || hash.includes("access_token="))) {
-          if (mounted) {
-            setHasValidSession(true);
-            setCheckingSession(false);
-          }
-          return;
-        }
-
-        if (mounted) {
-          setHasValidSession(false);
-          setCheckingSession(false);
-        }
-      } catch (err) {
-        if (mounted) {
-          setHasValidSession(false);
-          setCheckingSession(false);
-        }
-      }
-    }
-
-    verifyRecoverySession();
-
-    // Listen for auth state recovery event
-    try {
+    // 2. Exchange PKCE code if present from Supabase email link
+    if (queryCode) {
       const supabase = createClient();
-      const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
-          if (mounted) {
-            setHasValidSession(true);
-            setCheckingSession(false);
-          }
+      supabase.auth.exchangeCodeForSession(queryCode).then(({ data }) => {
+        if (data?.session?.user?.email) {
+          setEmail(data.session.user.email);
         }
       });
-
-      return () => {
-        mounted = false;
-        listener?.subscription?.unsubscribe();
-      };
-    } catch {
-      return () => {
-        mounted = false;
-      };
     }
-  }, []);
+
+    // 3. Check existing Supabase session email
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.email && !queryEmail) {
+        setEmail(data.user.email);
+      }
+    });
+  }, [searchParams]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) {
-      error("Please meet all password requirements.");
+      error("Please fulfill all password security rules.");
+      return;
+    }
+
+    if (!email) {
+      error("Please enter your registered email address.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const supabase = createClient();
-      const { error: supaErr } = await supabase.auth.updateUser({ password });
-      if (supaErr) {
-        throw new Error(supaErr.message);
+      // 1. Attempt Supabase Auth updateUser if recovery session active
+      try {
+        const supabase = createClient();
+        await supabase.auth.updateUser({ password });
+      } catch (supaErr) {
+        console.warn("Supabase updateUser note:", supaErr);
+      }
+
+      // 2. Perform direct database reset
+      const res = await resetPasswordDirectAction(email, password, localResetToken);
+      if (!res.success) {
+        error(res.error || "Failed to update password.");
+        return;
       }
 
       setIsDone(true);
-      success("Password updated successfully! Please sign in with your new password.");
-      setTimeout(() => {
-        router.push("/login");
-      }, 2500);
+      success("Your password has been successfully reset! You can now log in.");
     } catch (err: any) {
       error(err.message || "Failed to update password.");
     } finally {
@@ -137,7 +101,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen bg-neoYellow bg-neo-dots flex flex-col justify-center items-center p-4 sm:p-6">
-      <Link href="/" className="mb-8 flex items-center gap-3 group">
+      <Link href="/" className="mb-6 flex items-center gap-3 group">
         <div className="w-12 h-12 bg-neoBlack border-2 border-black rounded-[8px] flex items-center justify-center shadow-neo">
           <Zap className="w-7 h-7 text-neoYellow fill-neoYellow" />
         </div>
@@ -151,63 +115,66 @@ export default function ResetPasswordPage() {
         </div>
       </Link>
 
-      <div className="w-full max-w-md bg-neoWhite border-2 border-black rounded-[16px] shadow-neo-lg p-6 sm:p-8 space-y-6">
+      <div className="w-full max-w-md bg-neoWhite border-2 border-black rounded-[16px] shadow-neo-lg p-6 sm:p-8 space-y-5">
         <div>
           <h1 className="text-3xl font-heading font-black tracking-tight text-neoBlack">
-            New Password
+            Set New Password
           </h1>
-          <p className="text-sm text-neutral-600 mt-1 font-medium">
-            Set your new strong password to regain access to your account.
+          <p className="text-xs text-neutral-600 mt-1 font-bold">
+            Create a secure new password for your Subscriptly account.
           </p>
         </div>
 
-        {checkingSession ? (
-          <div className="py-8 text-center space-y-3">
-            <Loader2 className="w-8 h-8 text-black animate-spin mx-auto" />
-            <p className="text-sm font-bold text-neoBlack">Verifying reset credentials...</p>
-          </div>
-        ) : !hasValidSession ? (
-          <div className="bg-statusRed/10 border-2 border-black rounded-[10px] p-5 text-center space-y-3">
-            <AlertCircle className="w-8 h-8 text-statusRed mx-auto" />
-            <h2 className="text-base font-black text-neoBlack">Invalid or Expired Link</h2>
-            <p className="text-xs text-neutral-700 leading-relaxed">
-              This password reset link is invalid, has expired, or has already been used. Please submit a new request.
+        {isDone ? (
+          <div className="bg-neoSage/40 border-2 border-black rounded-[10px] p-5 text-center space-y-3">
+            <CheckCircle2 className="w-10 h-10 text-black mx-auto" />
+            <p className="font-heading font-black text-base text-neoBlack">Password Updated!</p>
+            <p className="text-xs text-neutral-700 font-medium">
+              Your password has been updated. You can now sign in with your new credentials.
             </p>
-            <Link href="/forgot-password" className="inline-block mt-2">
-              <NeoButton size="compact" variant="primary">
-                Request New Reset Link
-              </NeoButton>
-            </Link>
-          </div>
-        ) : isDone ? (
-          <div className="bg-neoSage/40 border-2 border-black rounded-[10px] p-4 text-center space-y-3">
-            <CheckCircle2 className="w-8 h-8 text-black mx-auto" />
-            <p className="font-bold text-sm">Password Updated!</p>
-            <p className="text-xs text-neutral-700">
-              Your password has been changed. Redirecting to login...
-            </p>
-            <Link href="/login" className="inline-block mt-2">
-              <NeoButton size="compact" variant="secondary">
-                Go to Sign In
+            <Link href="/login" className="inline-block mt-3 w-full">
+              <NeoButton variant="primary" className="w-full">
+                Proceed to Sign In
               </NeoButton>
             </Link>
           </div>
         ) : (
           <form onSubmit={handleResetPassword} className="space-y-4">
             <NeoInput
-              label="New Password"
-              type="password"
-              placeholder="••••••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              leftIcon={<Lock className="w-4 h-4" />}
+              label="Registered Account Email"
+              type="email"
+              placeholder="user@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              leftIcon={<Mail className="w-4 h-4" />}
               required
             />
 
+            <div className="space-y-1">
+              <label className="text-sm font-bold text-neoBlack">New Password</label>
+              <div className="relative">
+                <NeoInput
+                  type={showPassword ? "text" : "password"}
+                  placeholder="At least 9 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  leftIcon={<Lock className="w-4 h-4" />}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-black p-1"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
             <NeoInput
               label="Confirm New Password"
-              type="password"
-              placeholder="••••••••••••"
+              type={showPassword ? "text" : "password"}
+              placeholder="Confirm your password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               leftIcon={<Lock className="w-4 h-4" />}
@@ -230,7 +197,7 @@ export default function ResetPasswordPage() {
                     {hasLength ? <Check className="w-3 h-3 stroke-[3]" /> : <X className="w-3 h-3" />}
                   </span>
                   <span className={hasLength ? "text-neoBlack font-bold" : "text-neutral-500"}>
-                    More than 8 characters
+                    More than 8 chars
                   </span>
                 </div>
 
@@ -244,7 +211,7 @@ export default function ResetPasswordPage() {
                     {hasUppercase ? <Check className="w-3 h-3 stroke-[3]" /> : <X className="w-3 h-3" />}
                   </span>
                   <span className={hasUppercase ? "text-neoBlack font-bold" : "text-neutral-500"}>
-                    Uppercase letter (A-Z)
+                    Uppercase (A-Z)
                   </span>
                 </div>
 
@@ -258,7 +225,7 @@ export default function ResetPasswordPage() {
                     {hasLowercase ? <Check className="w-3 h-3 stroke-[3]" /> : <X className="w-3 h-3" />}
                   </span>
                   <span className={hasLowercase ? "text-neoBlack font-bold" : "text-neutral-500"}>
-                    Lowercase letter (a-z)
+                    Lowercase (a-z)
                   </span>
                 </div>
 
@@ -272,7 +239,7 @@ export default function ResetPasswordPage() {
                     {hasSpecial ? <Check className="w-3 h-3 stroke-[3]" /> : <X className="w-3 h-3" />}
                   </span>
                   <span className={hasSpecial ? "text-neoBlack font-bold" : "text-neutral-500"}>
-                    Special character (!@#$)
+                    Special char (!@#$)
                   </span>
                 </div>
               </div>
@@ -299,14 +266,14 @@ export default function ResetPasswordPage() {
               variant="primary"
               className="w-full mt-2"
               disabled={!isFormValid || loading}
-              icon={<ArrowRight className="w-4 h-4" />}
+              icon={loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
             >
               {loading ? "Updating Password..." : "Update Password"}
             </NeoButton>
           </form>
         )}
 
-        <div className="pt-4 border-t-2 border-neoDivider text-center">
+        <div className="pt-3 border-t-2 border-neoDivider text-center">
           <Link href="/login" className="inline-flex items-center gap-1.5 text-xs font-bold underline hover:text-neutral-800">
             <ArrowLeft className="w-3.5 h-3.5" /> Return to Sign In
           </Link>
@@ -316,3 +283,10 @@ export default function ResetPasswordPage() {
   );
 }
 
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-neoYellow flex items-center justify-center p-4">Loading reset console...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}

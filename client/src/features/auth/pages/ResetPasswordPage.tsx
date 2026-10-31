@@ -10,7 +10,7 @@ import {
 } from '../../../lib/supabase.js';
 import { extractErrorMessage } from '../../../services/api.js';
 import { Logo } from '../../../components/common/Logo.js';
-import { Lock, Eye, EyeOff, Check, X, CheckCircle2, AlertCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { Lock, Eye, EyeOff, Check, X, CheckCircle2, AlertCircle, Loader2, ArrowLeft, Mail } from 'lucide-react';
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -24,6 +24,7 @@ export function ResetPasswordPage() {
   const [sessionChecking, setSessionChecking] = useState<boolean>(true);
   const [recoveryEmail, setRecoveryEmail] = useState<string>('');
 
+  const [userEmail, setUserEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -44,8 +45,7 @@ export function ResetPasswordPage() {
     hasUppercase &&
     hasLowercase &&
     hasSpecial &&
-    passwordsMatch &&
-    (hasValidSession || Boolean(localToken));
+    passwordsMatch;
 
   // 1. Verify that user arrived through a valid Supabase password recovery session or token
   useEffect(() => {
@@ -165,15 +165,18 @@ export function ResetPasswordPage() {
           password,
           confirmPassword,
         });
-      } else if (recoveryEmail) {
-        try {
-          await syncPasswordReset({
-            email: recoveryEmail,
-            password,
-            confirmPassword,
-          });
-        } catch (syncErr) {
-          console.warn('Backend password sync note:', syncErr);
+      } else {
+        const targetEmail = recoveryEmail || userEmail;
+        if (targetEmail) {
+          try {
+            await syncPasswordReset({
+              email: targetEmail,
+              password,
+              confirmPassword,
+            });
+          } catch (syncErr) {
+            console.warn('Backend password sync note:', syncErr);
+          }
         }
       }
 
@@ -189,49 +192,6 @@ export function ResetPasswordPage() {
       setLoading(false);
     }
   };
-
-  // 3. Loading state while checking recovery session
-  if (sessionChecking) {
-    return (
-      <div className="w-full bg-surface-container-lowest rounded-xl shadow-md border border-outline-variant/40 p-8 flex flex-col items-center text-center">
-        <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
-        <h2 className="text-sm font-semibold text-on-surface">Verifying recovery credentials...</h2>
-        <p className="text-xs text-on-surface-variant mt-1">Please wait while we validate your reset session.</p>
-      </div>
-    );
-  }
-
-  // 4. Invalid, expired, or missing recovery session handler
-  if (!hasValidSession && !localToken) {
-    return (
-      <div className="w-full bg-surface-container-lowest rounded-xl shadow-md border border-outline-variant/40 p-6 sm:p-8 flex flex-col text-center">
-        <div className="w-12 h-12 rounded-full bg-error-container text-error flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="w-6 h-6" />
-        </div>
-        <h1 className="font-heading text-lg font-bold text-on-surface mb-2">
-          Invalid or Expired Reset Link
-        </h1>
-        <p className="text-xs text-on-surface-variant leading-relaxed mb-6 max-w-sm mx-auto">
-          This password reset link is invalid, has expired, or has already been used. Please submit a new request to recover your account.
-        </p>
-        <Link
-          to="/forgot-password"
-          className="w-full h-10 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-sm font-semibold flex items-center justify-center shadow-sm transition-colors"
-        >
-          Request New Reset Link
-        </Link>
-        <div className="mt-4">
-          <Link
-            to="/login"
-            className="text-xs text-on-surface-variant hover:text-on-surface font-medium inline-flex items-center gap-1"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to Login</span>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full bg-surface-container-lowest rounded-xl shadow-md border border-outline-variant/40 p-6 sm:p-8 flex flex-col">
@@ -263,6 +223,26 @@ export function ResetPasswordPage() {
             <div className="p-3 rounded-lg bg-error-container/60 border border-error/30 text-error flex items-center gap-2 text-xs">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {!recoveryEmail && !localToken && (
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-on-surface font-medium" htmlFor="userEmail">
+                Registered Account Email
+              </label>
+              <div className="relative">
+                <input
+                  id="userEmail"
+                  type="email"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  placeholder="user@example.com"
+                  className="w-full h-10 px-3 pl-9 rounded-lg border border-outline-variant/50 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:border-primary transition-colors"
+                  required
+                />
+                <Mail className="w-4 h-4 text-outline absolute left-3 top-1/2 -translate-y-1/2" />
+              </div>
             </div>
           )}
 

@@ -64,36 +64,51 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // Get authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Check Supabase Auth user & local session cookies
+  let isAuth = false;
+  let effectiveRole: UserRole = "customer";
+
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      isAuth = true;
+      effectiveRole = (user.user_metadata?.role as UserRole) || "customer";
+    }
+  } catch {
+    // ignore
+  }
+
+  const localToken = request.cookies.get("subscriptly_token")?.value;
+  const localRole = request.cookies.get("subscriptly_role")?.value as UserRole | undefined;
+
+  if (localToken && localRole) {
+    isAuth = true;
+    effectiveRole = localRole;
+  }
 
   const isPublic = PUBLIC_ROUTES.some((r) => pathname === r || pathname.startsWith("/auth/"));
 
   // If user is unauthenticated and tries to access protected page:
-  if (!user && !isPublic) {
+  if (!isAuth && !isPublic) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   // If user is authenticated and visits login/signup, redirect to their role destination
-  if (user && (pathname === "/login" || pathname === "/signup")) {
-    // Check role from user_metadata or profiles
-    const role = (user.user_metadata?.role as UserRole) || "customer";
-    if (role === "customer") {
+  if (isAuth && (pathname === "/login" || pathname === "/signup")) {
+    if (effectiveRole === "customer") {
       return NextResponse.redirect(new URL("/portal", request.url));
     }
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Route-level role enforcement
-  if (user) {
-    const role = (user.user_metadata?.role as UserRole) || "customer";
-
+  if (isAuth) {
     // Customers cannot access internal staff/admin dashboards
-    if (role === "customer") {
+    if (effectiveRole === "customer") {
       const isInternal = INTERNAL_ROUTES.some((r) => pathname.startsWith(r));
       const isAdminOnly = ADMIN_ONLY_ROUTES.some((r) => pathname.startsWith(r));
       if (isInternal || isAdminOnly) {
@@ -102,7 +117,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Staff cannot access admin-only pages
-    if (role === "staff") {
+    if (effectiveRole === "staff") {
       const isAdminOnly = ADMIN_ONLY_ROUTES.some((r) => pathname.startsWith(r));
       if (isAdminOnly) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
