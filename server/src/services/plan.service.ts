@@ -3,6 +3,32 @@ import { PlanStatus, BillingFrequency, Prisma } from '@prisma/client';
 import { CreatePlanInput, UpdatePlanInput, QueryPlanInput } from '../validators/plan.validator.js';
 import { createAuditLog } from './audit.service.js';
 
+export function enrichPlanWithDetails(plan: any) {
+  if (!plan) return plan;
+
+  const basePrice = Number(plan.product?.salesPrice || 0);
+  const extraPrice = Number(plan.variant?.additionalPrice ?? plan.variant?.price ?? 0);
+  const calculatedProductPrice = Math.round((basePrice + extraPrice) * 100) / 100;
+  const configuredPlanPrice = Number(plan.price);
+
+  const now = new Date();
+  const startsValid = !plan.startDate || new Date(plan.startDate) <= now;
+  const endsValid = !plan.endDate || new Date(plan.endDate) >= now;
+  const isCurrentlyAvailable = plan.status === 'ACTIVE' && startsValid && endsValid;
+
+  return {
+    ...plan,
+    pricingBreakdown: {
+      baseSalesPrice: basePrice,
+      productBasePrice: basePrice,
+      variantAdditionalPrice: extraPrice,
+      calculatedProductPrice,
+      planPrice: configuredPlanPrice,
+    },
+    isCurrentlyAvailable,
+  };
+}
+
 export async function listPlans(query: QueryPlanInput) {
   const { page, limit, search, status, billingFrequency, productId, sortBy, sortOrder } = query;
   const skip = (page - 1) * limit;
@@ -38,10 +64,10 @@ export async function listPlans(query: QueryPlanInput) {
       orderBy: { [sortBy]: sortOrder },
       include: {
         product: {
-          select: { id: true, name: true, code: true, category: true, status: true },
+          select: { id: true, name: true, code: true, type: true, salesPrice: true, category: true, status: true },
         },
         variant: {
-          select: { id: true, name: true, code: true, price: true, status: true },
+          select: { id: true, name: true, code: true, additionalPrice: true, price: true, status: true },
         },
       },
     }),
@@ -50,7 +76,7 @@ export async function listPlans(query: QueryPlanInput) {
   ]);
 
   return {
-    items,
+    items: items.map(enrichPlanWithDetails),
     pagination: {
       total,
       page,
@@ -84,7 +110,7 @@ export async function getPlanById(id: string) {
     throw error;
   }
 
-  return plan;
+  return enrichPlanWithDetails(plan);
 }
 
 export async function createPlan(input: CreatePlanInput, actorUserId?: string) {
@@ -118,7 +144,7 @@ export async function createPlan(input: CreatePlanInput, actorUserId?: string) {
     throw error;
   }
 
-  // 3. If variantId provided, verify it exists and BELONGS to this product
+  // 3. If variantId provided, verify it exists, BELONGS to this product, and is ACTIVE
   if (input.variantId) {
     const variant = product.variants.find((v) => v.id === input.variantId);
     if (!variant) {
@@ -131,14 +157,23 @@ export async function createPlan(input: CreatePlanInput, actorUserId?: string) {
 
     if (variant.status !== 'ACTIVE') {
       const error = new Error(
-        `Cannot create plan for variant '${variant.name}' because the variant is ${variant.status.toLowerCase()}.`
+        `Cannot create plan for variant '${variant.name}' because the variant is ${variant.status.toLowerCase()}. Inactive variants cannot be selected for new plans.`
       );
       (error as any).statusCode = 400;
       throw error;
     }
   }
 
-  // 4. Create Plan
+  // 4. Validate availability dates if provided
+  const parsedStart = input.startDate ? new Date(input.startDate) : null;
+  const parsedEnd = input.endDate ? new Date(input.endDate) : null;
+  if (parsedStart && parsedEnd && parsedEnd < parsedStart) {
+    const error = new Error('Availability end date cannot be earlier than start date');
+    (error as any).statusCode = 400;
+    throw error;
+  }
+
+  // 5. Create Plan
   const plan = await prisma.plan.create({
     data: {
       name: input.name,
@@ -148,6 +183,13 @@ export async function createPlan(input: CreatePlanInput, actorUserId?: string) {
       variantId: input.variantId || null,
       price: new Prisma.Decimal(input.price),
       billingFrequency: input.billingFrequency as BillingFrequency,
+      minQuantity: input.minQuantity ?? 1,
+      startDate: parsedStart,
+      endDate: parsedEnd,
+      autoCloseOnEnd: input.autoCloseOnEnd ?? false,
+      allowEarlyClosure: input.allowEarlyClosure ?? true,
+      allowPause: input.allowPause ?? true,
+      allowRenewal: input.allowRenewal ?? true,
       status: input.status as PlanStatus,
       pauseLimitCycles: input.pauseLimitCycles,
       cancellationNoticeDays: input.cancellationNoticeDays,
@@ -155,12 +197,12 @@ export async function createPlan(input: CreatePlanInput, actorUserId?: string) {
       features: input.features || [],
     },
     include: {
-      product: { select: { id: true, name: true, code: true } },
-      variant: { select: { id: true, name: true, code: true, price: true } },
+      product: { select: { id: true, name: true, code: true, type: true, salesPrice: true } },
+      variant: { select: { id: true, name: true, code: true, additionalPrice: true, price: true } },
     },
   });
 
-  // 5. Audit Log
+  // 6. Audit Log
   if (actorUserId) {
     await createAuditLog({
       userId: actorUserId,
@@ -171,7 +213,7 @@ export async function createPlan(input: CreatePlanInput, actorUserId?: string) {
     });
   }
 
-  return plan;
+  return enrichPlanWithDetails(plan);
 }
 
 export async function updatePlan(id: string, input: UpdatePlanInput, actorUserId?: string) {
@@ -214,6 +256,14 @@ export async function updatePlan(id: string, input: UpdatePlanInput, actorUserId
     }
   }
 
+  const parsedStart = input.startDate !== undefined ? (input.startDate ? new Date(input.startDate) : null) : plan.startDate;
+  const parsedEnd = input.endDate !== undefined ? (input.endDate ? new Date(input.endDate) : null) : plan.endDate;
+  if (parsedStart && parsedEnd && parsedEnd < parsedStart) {
+    const error = new Error('Availability end date cannot be earlier than start date');
+    (error as any).statusCode = 400;
+    throw error;
+  }
+
   const updated = await prisma.plan.update({
     where: { id },
     data: {
@@ -224,6 +274,13 @@ export async function updatePlan(id: string, input: UpdatePlanInput, actorUserId
       variantId: input.variantId === null ? null : input.variantId,
       price: input.price !== undefined ? new Prisma.Decimal(input.price) : undefined,
       billingFrequency: input.billingFrequency as BillingFrequency | undefined,
+      minQuantity: input.minQuantity !== undefined ? input.minQuantity : undefined,
+      startDate: parsedStart,
+      endDate: parsedEnd,
+      autoCloseOnEnd: input.autoCloseOnEnd !== undefined ? input.autoCloseOnEnd : undefined,
+      allowEarlyClosure: input.allowEarlyClosure !== undefined ? input.allowEarlyClosure : undefined,
+      allowPause: input.allowPause !== undefined ? input.allowPause : undefined,
+      allowRenewal: input.allowRenewal !== undefined ? input.allowRenewal : undefined,
       status: input.status as PlanStatus | undefined,
       pauseLimitCycles: input.pauseLimitCycles,
       cancellationNoticeDays: input.cancellationNoticeDays,
@@ -231,8 +288,8 @@ export async function updatePlan(id: string, input: UpdatePlanInput, actorUserId
       features: input.features !== undefined ? input.features : undefined,
     },
     include: {
-      product: { select: { id: true, name: true, code: true } },
-      variant: { select: { id: true, name: true, code: true, price: true } },
+      product: { select: { id: true, name: true, code: true, type: true, salesPrice: true } },
+      variant: { select: { id: true, name: true, code: true, additionalPrice: true, price: true } },
     },
   });
 
@@ -246,7 +303,7 @@ export async function updatePlan(id: string, input: UpdatePlanInput, actorUserId
     });
   }
 
-  return updated;
+  return enrichPlanWithDetails(updated);
 }
 
 export async function updatePlanStatus(id: string, status: PlanStatus, actorUserId?: string) {

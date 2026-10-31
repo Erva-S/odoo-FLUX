@@ -14,6 +14,10 @@ export interface ProductQueryParams {
 export interface CreateProductPayload {
   name: string;
   code: string;
+  type?: string;
+  salesPrice?: number;
+  costPrice?: number;
+  notes?: string;
   description?: string;
   category?: string;
   status?: string;
@@ -21,7 +25,9 @@ export interface CreateProductPayload {
     name: string;
     code: string;
     description?: string;
-    price: number;
+    additionalPrice?: number;
+    price?: number;
+    attributes?: Record<string, any>;
     status?: string;
   }[];
 }
@@ -29,6 +35,10 @@ export interface CreateProductPayload {
 export interface UpdateProductPayload {
   name?: string;
   code?: string;
+  type?: string;
+  salesPrice?: number;
+  costPrice?: number;
+  notes?: string;
   description?: string;
   category?: string;
   status?: string;
@@ -38,7 +48,9 @@ export interface CreateVariantPayload {
   name: string;
   code: string;
   description?: string;
-  price: number;
+  additionalPrice?: number;
+  price?: number;
+  attributes?: Record<string, any>;
   status?: string;
 }
 
@@ -46,7 +58,9 @@ export interface UpdateVariantPayload {
   name?: string;
   code?: string;
   description?: string;
+  additionalPrice?: number;
   price?: number;
+  attributes?: Record<string, any>;
   status?: string;
 }
 

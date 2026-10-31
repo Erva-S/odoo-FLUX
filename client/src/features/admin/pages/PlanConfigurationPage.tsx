@@ -17,6 +17,10 @@ import {
   Search,
   X,
   Loader2,
+  Calendar,
+  Check,
+  Ban,
+  Calculator,
 } from 'lucide-react';
 import { Badge } from '../../../components/ui/Badge.js';
 import { Button } from '../../../components/ui/Button.js';
@@ -34,7 +38,9 @@ import { Plan, Product, ProductVariant, BillingFrequency } from '../../../types/
 import { formatCurrencyINR } from '../../../utils/formatters.js';
 import { extractErrorMessage } from '../../../services/api.js';
 
-const FREQUENCY_LABELS: Record<BillingFrequency, string> = {
+const FREQUENCY_LABELS: Record<string, string> = {
+  DAILY: 'Daily',
+  WEEKLY: 'Weekly',
   MONTHLY: 'Monthly',
   QUARTERLY: 'Quarterly',
   HALF_YEARLY: 'Half-Yearly',
@@ -71,6 +77,13 @@ export function PlanConfigurationPage() {
   const [formVariantId, setFormVariantId] = useState('');
   const [formPrice, setFormPrice] = useState('');
   const [formFreq, setFormFreq] = useState<BillingFrequency>('MONTHLY');
+  const [formMinQty, setFormMinQty] = useState('1');
+  const [formStartDate, setFormStartDate] = useState('');
+  const [formEndDate, setFormEndDate] = useState('');
+  const [formAutoClose, setFormAutoClose] = useState(false);
+  const [formEarlyClose, setFormEarlyClose] = useState(true);
+  const [formPause, setFormPause] = useState(true);
+  const [formRenew, setFormRenew] = useState(true);
   const [formPauseCycles, setFormPauseCycles] = useState('2');
   const [formNoticeDays, setFormNoticeDays] = useState('30');
   const [formTrialDays, setFormTrialDays] = useState('0');
@@ -80,6 +93,13 @@ export function PlanConfigurationPage() {
   const [editName, setEditName] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editFreq, setEditFreq] = useState<BillingFrequency>('MONTHLY');
+  const [editMinQty, setEditMinQty] = useState('1');
+  const [editStartDate, setEditStartDate] = useState('');
+  const [editEndDate, setEditEndDate] = useState('');
+  const [editAutoClose, setEditAutoClose] = useState(false);
+  const [editEarlyClose, setEditEarlyClose] = useState(true);
+  const [editPause, setEditPause] = useState(true);
+  const [editRenew, setEditRenew] = useState(true);
   const [editPauseCycles, setEditPauseCycles] = useState('2');
   const [editNoticeDays, setEditNoticeDays] = useState('30');
   const [editTrialDays, setEditTrialDays] = useState('0');
@@ -120,9 +140,35 @@ export function PlanConfigurationPage() {
     loadPlans();
   }, [loadPlans]);
 
-  // Derived variants for the selected product in Create Form
+  // Derived variants & calculated product pricing for Create Form
   const selectedProduct = activeProducts.find((p) => p.id === formProductId);
   const availableVariants = selectedProduct?.variants?.filter((v: ProductVariant) => v.status === 'ACTIVE') || [];
+  const selectedVariant = availableVariants.find((v) => v.id === formVariantId);
+
+  const baseSalesPrice = Number(selectedProduct?.salesPrice ?? selectedProduct?.price ?? 0);
+  const variantAddPrice = Number(selectedVariant?.additionalPrice ?? 0);
+  const calculatedProductPrice = baseSalesPrice + variantAddPrice;
+
+  // Auto-fill price when product/variant changes if price field is empty
+  const handleProductChange = (newProductId: string) => {
+    setFormProductId(newProductId);
+    setFormVariantId('');
+    const prod = activeProducts.find((p) => p.id === newProductId);
+    if (prod) {
+      const base = Number(prod.salesPrice ?? prod.price ?? 0);
+      setFormPrice(String(base));
+    }
+  };
+
+  const handleVariantChange = (newVariantId: string) => {
+    setFormVariantId(newVariantId);
+    if (selectedProduct) {
+      const base = Number(selectedProduct.salesPrice ?? selectedProduct.price ?? 0);
+      const variant = availableVariants.find((v) => v.id === newVariantId);
+      const add = Number(variant?.additionalPrice ?? 0);
+      setFormPrice(String(base + add));
+    }
+  };
 
   const handleCreatePlan = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,6 +176,18 @@ export function PlanConfigurationPage() {
       setError('Please select an active product.');
       return;
     }
+
+    if (formStartDate && formEndDate && new Date(formEndDate) < new Date(formStartDate)) {
+      setError('Availability End Date cannot be earlier than Start Date.');
+      return;
+    }
+
+    const minQtyParsed = parseInt(formMinQty, 10);
+    if (isNaN(minQtyParsed) || minQtyParsed < 1) {
+      setError('Minimum quantity must be at least 1.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
@@ -147,6 +205,13 @@ export function PlanConfigurationPage() {
         variantId: formVariantId || null,
         price: parseFloat(formPrice),
         billingFrequency: formFreq,
+        minQuantity: minQtyParsed,
+        startDate: formStartDate ? new Date(formStartDate).toISOString() : null,
+        endDate: formEndDate ? new Date(formEndDate).toISOString() : null,
+        autoCloseOnEnd: formAutoClose,
+        allowEarlyClosure: formEarlyClose,
+        allowPause: formPause,
+        allowRenewal: formRenew,
         status: 'ACTIVE',
         pauseLimitCycles: parseInt(formPauseCycles, 10) || 2,
         cancellationNoticeDays: parseInt(formNoticeDays, 10) || 30,
@@ -168,6 +233,18 @@ export function PlanConfigurationPage() {
   const handleUpdatePlan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPlan) return;
+
+    if (editStartDate && editEndDate && new Date(editEndDate) < new Date(editStartDate)) {
+      setError('Availability End Date cannot be earlier than Start Date.');
+      return;
+    }
+
+    const minQtyParsed = parseInt(editMinQty, 10);
+    if (isNaN(minQtyParsed) || minQtyParsed < 1) {
+      setError('Minimum quantity must be at least 1.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
@@ -181,6 +258,13 @@ export function PlanConfigurationPage() {
         name: editName,
         price: parseFloat(editPrice),
         billingFrequency: editFreq,
+        minQuantity: minQtyParsed,
+        startDate: editStartDate ? new Date(editStartDate).toISOString() : null,
+        endDate: editEndDate ? new Date(editEndDate).toISOString() : null,
+        autoCloseOnEnd: editAutoClose,
+        allowEarlyClosure: editEarlyClose,
+        allowPause: editPause,
+        allowRenewal: editRenew,
         pauseLimitCycles: parseInt(editPauseCycles, 10),
         cancellationNoticeDays: parseInt(editNoticeDays, 10),
         trialPeriodDays: parseInt(editTrialDays, 10),
@@ -226,6 +310,13 @@ export function PlanConfigurationPage() {
     setEditName(plan.name);
     setEditPrice(String(plan.price));
     setEditFreq(plan.billingFrequency);
+    setEditMinQty(String(plan.minQuantity ?? 1));
+    setEditStartDate(plan.startDate ? new Date(plan.startDate).toISOString().slice(0, 10) : '');
+    setEditEndDate(plan.endDate ? new Date(plan.endDate).toISOString().slice(0, 10) : '');
+    setEditAutoClose(plan.autoCloseOnEnd ?? false);
+    setEditEarlyClose(plan.allowEarlyClosure ?? true);
+    setEditPause(plan.allowPause ?? true);
+    setEditRenew(plan.allowRenewal ?? true);
     setEditPauseCycles(String(plan.pauseLimitCycles));
     setEditNoticeDays(String(plan.cancellationNoticeDays));
     setEditTrialDays(String(plan.trialPeriodDays));
@@ -240,10 +331,51 @@ export function PlanConfigurationPage() {
     setFormVariantId('');
     setFormPrice('');
     setFormFreq('MONTHLY');
+    setFormMinQty('1');
+    setFormStartDate('');
+    setFormEndDate('');
+    setFormAutoClose(false);
+    setFormEarlyClose(true);
+    setFormPause(true);
+    setFormRenew(true);
     setFormPauseCycles('2');
     setFormNoticeDays('30');
     setFormTrialDays('0');
     setFormFeatures('');
+  };
+
+  // Helper to determine availability display
+  const getAvailabilityBadge = (startDate?: string | null, endDate?: string | null) => {
+    const now = new Date();
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+
+    if (start && now < start) {
+      return (
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+          <Clock className="w-3 h-3" /> Starts {start.toLocaleDateString()}
+        </span>
+      );
+    }
+    if (end && now > end) {
+      return (
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+          <Ban className="w-3 h-3" /> Expired {end.toLocaleDateString()}
+        </span>
+      );
+    }
+    if (start || end) {
+      return (
+        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+          <Calendar className="w-3 h-3" /> Available {end ? `thru ${end.toLocaleDateString()}` : 'Now'}
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded">
+        Always Active
+      </span>
+    );
   };
 
   return (
@@ -259,10 +391,10 @@ export function PlanConfigurationPage() {
             <span className="font-data-mono text-xs text-outline">v2.0 PostgreSQL Live Engine</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-on-surface font-headline-xl">
-            Subscription Plans
+            Subscription Plans & Governance
           </h1>
           <p className="text-sm text-on-surface-variant font-body-default mt-1">
-            Define recurring billing frequencies, renewal rules, pause limits, and early closure policies across product catalogs.
+            Configure recurring billing cadences (Daily, Weekly, Monthly, Yearly), minimum order quantities, availability windows, and independent lifecycle rules.
           </p>
         </div>
         <div className="flex items-center gap-2 self-start lg:self-center">
@@ -272,12 +404,12 @@ export function PlanConfigurationPage() {
             leftIcon={<Plus className="w-4 h-4" />}
             onClick={() => {
               if (activeProducts.length > 0 && !formProductId) {
-                setFormProductId(activeProducts[0].id);
+                handleProductChange(activeProducts[0].id);
               }
               setIsCreateModalOpen(true);
             }}
           >
-            + Create Plan
+            + Create Plan Blueprint
           </Button>
         </div>
       </div>
@@ -349,16 +481,16 @@ export function PlanConfigurationPage() {
         <div className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/20 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="font-label-caps text-xs uppercase text-outline font-semibold">
-              Pricing Rigor
+              Lifecycle Governance
             </span>
             <RotateCw className="w-4 h-4 text-outline" />
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-on-surface font-metric-display">Decimal</span>
-            <span className="text-xs font-semibold text-tertiary">Exact 12,2 Precision</span>
+            <span className="text-3xl font-bold text-on-surface font-metric-display">4 Rules</span>
+            <span className="text-xs font-semibold text-tertiary">Independent Flags</span>
           </div>
           <div className="mt-2 text-on-surface-variant text-xs flex items-center justify-between pt-1 border-t border-outline-variant/10">
-            <span>Historical contract immunity guaranteed</span>
+            <span>Auto-close • Early-close • Pause • Renewal</span>
           </div>
         </div>
       </div>
@@ -379,7 +511,7 @@ export function PlanConfigurationPage() {
         <div className="flex flex-wrap items-center gap-2">
           {/* Cadence Filters */}
           <div className="bg-surface-container-low p-1 rounded-xl flex items-center gap-1 flex-wrap">
-            {['ALL', 'MONTHLY', 'QUARTERLY', 'YEARLY', 'ONE_TIME'].map((cad) => (
+            {['ALL', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].map((cad) => (
               <button
                 key={cad}
                 type="button"
@@ -393,7 +525,7 @@ export function PlanConfigurationPage() {
                     : 'text-on-surface-variant hover:text-on-surface'
                 }`}
               >
-                {cad === 'ALL' ? 'All Cadences' : FREQUENCY_LABELS[cad as BillingFrequency]}
+                {cad === 'ALL' ? 'All Cadences' : FREQUENCY_LABELS[cad] || cad}
               </button>
             ))}
           </div>
@@ -443,18 +575,40 @@ export function PlanConfigurationPage() {
                   </Badge>
                 </div>
 
-                <div className="text-xs text-on-surface-variant font-data-mono mb-2">
-                  Code: <strong className="text-on-surface">{plan.code}</strong>
+                <div className="text-xs text-on-surface-variant font-data-mono mb-2 flex items-center justify-between">
+                  <span>Code: <strong className="text-on-surface">{plan.code}</strong></span>
+                  <span className="font-semibold text-primary">Min Qty: {plan.minQuantity ?? 1}</span>
                 </div>
 
-                {/* Product & Variant Association */}
-                <div className="p-2.5 rounded-lg bg-surface-container-low text-xs mb-4">
-                  <div>
-                    Product: <strong className="text-on-surface">{plan.product?.name || 'Base'}</strong>
+                {/* Product & Variant Association with Pricing Breakdown */}
+                <div className="p-3 rounded-lg bg-surface-container-low text-xs mb-3 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-on-surface-variant">Product:</span>
+                    <strong className="text-on-surface">{plan.product?.name || 'Base'}</strong>
                   </div>
-                  {plan.variant && (
-                    <div className="text-[11px] text-on-surface-variant mt-0.5">
-                      Variant: <strong className="text-primary">{plan.variant.name}</strong>
+                  {plan.variant ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-on-surface-variant">Variant:</span>
+                      <strong className="text-primary">{plan.variant.name}</strong>
+                    </div>
+                  ) : null}
+
+                  {plan.pricingBreakdown && (
+                    <div className="pt-2 mt-2 border-t border-outline-variant/10 text-[11px] text-on-surface-variant space-y-0.5 font-data-mono">
+                      <div className="flex justify-between">
+                        <span>Base Sales Price:</span>
+                        <span>{formatCurrencyINR(plan.pricingBreakdown.baseSalesPrice ?? plan.pricingBreakdown.productBasePrice ?? 0)}</span>
+                      </div>
+                      {plan.pricingBreakdown.variantAdditionalPrice > 0 && (
+                        <div className="flex justify-between text-tertiary">
+                          <span>+ Variant Add-on:</span>
+                          <span>+{formatCurrencyINR(plan.pricingBreakdown.variantAdditionalPrice)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-semibold text-on-surface pt-0.5">
+                        <span>Calculated Total:</span>
+                        <span>{formatCurrencyINR(plan.pricingBreakdown.calculatedProductPrice)}</span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -469,30 +623,71 @@ export function PlanConfigurationPage() {
                   </span>
                 </div>
 
-                {/* Lifecycle Terms */}
-                <div className="grid grid-cols-3 gap-2 my-4 p-3 bg-surface-container-low rounded-xl text-xs text-center">
-                  <div>
-                    <span className="text-[10px] uppercase font-semibold text-outline block">Pause</span>
-                    <strong className="text-on-surface text-xs">{plan.pauseLimitCycles} Cycles</strong>
-                  </div>
-                  <div>
-                    <span className="text-[10px] uppercase font-semibold text-outline block">Notice</span>
-                    <strong className="text-on-surface text-xs">{plan.cancellationNoticeDays} Days</strong>
-                  </div>
-                  <div>
-                    <span className="text-[10px] uppercase font-semibold text-outline block">Trial</span>
-                    <strong className="text-on-surface text-xs">{plan.trialPeriodDays} Days</strong>
+                {/* Availability Window */}
+                <div className="mb-3">
+                  {getAvailabilityBadge(plan.startDate, plan.endDate)}
+                </div>
+
+                {/* Lifecycle Governance Matrix */}
+                <div className="p-3 bg-surface-container-low rounded-xl text-xs space-y-1.5 mb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-outline block">
+                    Lifecycle Governance
+                  </span>
+                  <div className="grid grid-cols-2 gap-1 text-[11px]">
+                    <div className="flex items-center gap-1.5">
+                      {plan.autoCloseOnEnd ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      ) : (
+                        <Ban className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      )}
+                      <span className={plan.autoCloseOnEnd ? 'text-on-surface font-medium' : 'text-slate-500'}>
+                        Auto-close on End
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      {plan.allowEarlyClosure ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      ) : (
+                        <Ban className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                      )}
+                      <span className={plan.allowEarlyClosure ? 'text-on-surface font-medium' : 'text-slate-500'}>
+                        Early Closure
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      {plan.allowPause ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      ) : (
+                        <Ban className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                      )}
+                      <span className={plan.allowPause ? 'text-on-surface font-medium' : 'text-slate-500'}>
+                        Pause Allowed
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      {plan.allowRenewal ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      ) : (
+                        <Ban className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                      )}
+                      <span className={plan.allowRenewal ? 'text-on-surface font-medium' : 'text-slate-500'}>
+                        Auto-Renewal
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Features List */}
                 {plan.features && plan.features.length > 0 && (
-                  <div className="space-y-2 my-4">
-                    <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider font-label-caps block">
+                  <div className="space-y-1 my-3">
+                    <span className="text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider font-label-caps block">
                       Included Terms
                     </span>
-                    {plan.features.slice(0, 4).map((feat: string, idx: number) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs text-on-surface">
+                    {plan.features.slice(0, 3).map((feat: string, idx: number) => (
+                      <div key={idx} className="flex items-start gap-1.5 text-xs text-on-surface">
                         <CheckCircle2 className="w-3.5 h-3.5 text-tertiary shrink-0 mt-0.5" />
                         <span>{feat}</span>
                       </div>
@@ -502,14 +697,14 @@ export function PlanConfigurationPage() {
               </div>
 
               {/* Actions Footer */}
-              <div className="pt-4 border-t border-outline-variant/20 flex items-center justify-between gap-2">
+              <div className="pt-4 border-t border-outline-variant/20 flex items-center justify-between gap-2 mt-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => openEditModal(plan)}
                   leftIcon={<Edit2 className="w-3.5 h-3.5" />}
                 >
-                  Edit
+                  Edit Blueprint
                 </Button>
                 <div className="flex items-center gap-1">
                   <Button
@@ -570,13 +765,13 @@ export function PlanConfigurationPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         title="Create Subscription Plan Blueprint"
-        description="Configure pricing, billing intervals, lifecycle terms, and governance policies."
+        description="Configure pricing, billing intervals, availability dates, and independent lifecycle governance rules."
         maxWidth="lg"
       >
         <form onSubmit={handleCreatePlan} className="space-y-4">
           <Input
             label="Plan Display Name *"
-            placeholder="e.g. Enterprise Custom Growth Tier"
+            placeholder="e.g. Enterprise Annual Cloud Tier"
             value={formName}
             onChange={(e: any) => setFormName(e.target.value)}
             required
@@ -585,19 +780,19 @@ export function PlanConfigurationPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Plan Code *"
-              placeholder="e.g. PLN-ENT-GROWTH"
+              placeholder="e.g. PLN-ENT-ANNUAL"
               value={formCode}
               onChange={(e: any) => setFormCode(e.target.value)}
               required
             />
             <Input
-              label="Recurring Price (INR) *"
+              label="Minimum Order Quantity *"
               type="number"
-              min="0"
-              step="0.01"
-              placeholder="e.g. 75000"
-              value={formPrice}
-              onChange={(e: any) => setFormPrice(e.target.value)}
+              min="1"
+              step="1"
+              placeholder="e.g. 5"
+              value={formMinQty}
+              onChange={(e: any) => setFormMinQty(e.target.value)}
               required
             />
           </div>
@@ -610,16 +805,14 @@ export function PlanConfigurationPage() {
               </label>
               <select
                 value={formProductId}
-                onChange={(e: any) => {
-                  setFormProductId(e.target.value);
-                  setFormVariantId('');
-                }}
+                onChange={(e: any) => handleProductChange(e.target.value)}
                 className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
                 required
               >
+                <option value="">Select a Product...</option>
                 {activeProducts.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} ({p.code})
+                    {p.name} ({p.code}) — Base {formatCurrencyINR(Number(p.salesPrice ?? p.price ?? 0))}
                   </option>
                 ))}
               </select>
@@ -632,36 +825,176 @@ export function PlanConfigurationPage() {
               </label>
               <select
                 value={formVariantId}
-                onChange={(e: any) => setFormVariantId(e.target.value)}
+                onChange={(e: any) => handleVariantChange(e.target.value)}
                 className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
               >
-                <option value="">Base Product (No specific variant)</option>
+                <option value="">Base Product (No variant add-on)</option>
                 {availableVariants.map((v: ProductVariant) => (
                   <option key={v.id} value={v.id}>
-                    {v.name} ({v.code}) — {formatCurrencyINR(Number(v.price))}
+                    {v.name} (+{formatCurrencyINR(Number(v.additionalPrice ?? 0))})
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          {/* Pricing Breakdown Indicator Card */}
+          {selectedProduct && (
+            <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-on-surface">
+                <span className="flex items-center gap-1.5">
+                  <Calculator className="w-4 h-4 text-primary" />
+                  Calculated Product Price Breakdown
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFormPrice(String(calculatedProductPrice))}
+                  className="text-primary hover:underline text-xs font-semibold"
+                >
+                  Use Calculated (₹{calculatedProductPrice.toLocaleString('en-IN')})
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-xs pt-1 border-t border-outline-variant/10">
+                <div>
+                  <span className="text-outline block text-[10px] uppercase">Base Sales Price</span>
+                  <strong className="text-on-surface">{formatCurrencyINR(baseSalesPrice)}</strong>
+                </div>
+                <div>
+                  <span className="text-outline block text-[10px] uppercase">Variant Add-on</span>
+                  <strong className="text-tertiary">+{formatCurrencyINR(variantAddPrice)}</strong>
+                </div>
+                <div>
+                  <span className="text-outline block text-[10px] uppercase">Calculated Price</span>
+                  <strong className="text-primary font-bold">{formatCurrencyINR(calculatedProductPrice)}</strong>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Configured Plan Recurring Price (INR) *"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="e.g. 5560"
+              value={formPrice}
+              onChange={(e: any) => setFormPrice(e.target.value)}
+              required
+            />
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-caps mb-1.5">
-                Billing Cadence
+                Billing Cadence *
               </label>
               <select
                 value={formFreq}
                 onChange={(e: any) => setFormFreq(e.target.value as BillingFrequency)}
                 className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
               >
+                <option value="DAILY">Daily</option>
+                <option value="WEEKLY">Weekly</option>
                 <option value="MONTHLY">Monthly</option>
-                <option value="QUARTERLY">Quarterly</option>
-                <option value="HALF_YEARLY">Half-Yearly</option>
                 <option value="YEARLY">Yearly</option>
-                <option value="ONE_TIME">One-Time</option>
               </select>
             </div>
+          </div>
+
+          {/* Availability Start & End Dates */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-caps mb-1.5">
+                Availability Start Date
+              </label>
+              <input
+                type="date"
+                value={formStartDate}
+                onChange={(e) => setFormStartDate(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-caps mb-1.5">
+                Availability End Date
+              </label>
+              <input
+                type="date"
+                value={formEndDate}
+                min={formStartDate || undefined}
+                onChange={(e) => setFormEndDate(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Configurable Plan Lifecycle Rules */}
+          <div className="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-on-surface block">
+              Independent Lifecycle Rules
+            </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formAutoClose}
+                  onChange={(e) => setFormAutoClose(e.target.checked)}
+                  className="mt-0.5 rounded border-outline-variant text-primary focus:ring-0"
+                />
+                <div>
+                  <strong className="text-on-surface block">Auto-Close on End</strong>
+                  <span className="text-on-surface-variant text-[11px]">
+                    Automatically terminate subscriptions when plan availability window ends.
+                  </span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formEarlyClose}
+                  onChange={(e) => setFormEarlyClose(e.target.checked)}
+                  className="mt-0.5 rounded border-outline-variant text-primary focus:ring-0"
+                />
+                <div>
+                  <strong className="text-on-surface block">Allow Early Closure</strong>
+                  <span className="text-on-surface-variant text-[11px]">
+                    Permit subscriber or staff to cancel prior to renewal cycle expiration.
+                  </span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formPause}
+                  onChange={(e) => setFormPause(e.target.checked)}
+                  className="mt-0.5 rounded border-outline-variant text-primary focus:ring-0"
+                />
+                <div>
+                  <strong className="text-on-surface block">Allow Pause</strong>
+                  <span className="text-on-surface-variant text-[11px]">
+                    Enable customer to pause recurring billing cycles without cancelling.
+                  </span>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formRenew}
+                  onChange={(e) => setFormRenew(e.target.checked)}
+                  className="mt-0.5 rounded border-outline-variant text-primary focus:ring-0"
+                />
+                <div>
+                  <strong className="text-on-surface block">Allow Renewal</strong>
+                  <span className="text-on-surface-variant text-[11px]">
+                    Enable automatic renewal at cycle boundary.
+                  </span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <Input
               label="Max Pause Cycles"
               type="number"
@@ -693,8 +1026,8 @@ export function PlanConfigurationPage() {
               Included Terms & Features (1 per line)
             </label>
             <textarea
-              rows={3}
-              placeholder="Up to 10,000 active subscribers&#10;24/7 Priority support SLA&#10;Automated GST e-invoices"
+              rows={2}
+              placeholder="Up to 10,000 active subscribers&#10;24/7 Priority support SLA"
               value={formFeatures}
               onChange={(e: any) => setFormFeatures(e.target.value)}
               className="w-full p-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
@@ -737,55 +1070,129 @@ export function PlanConfigurationPage() {
                 onChange={(e: any) => setEditPrice(e.target.value)}
                 required
               />
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-caps mb-1.5">
-                  Billing Cadence
-                </label>
-                <select
-                  value={editFreq}
-                  onChange={(e: any) => setEditFreq(e.target.value as BillingFrequency)}
-                  className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
-                >
-                  <option value="MONTHLY">Monthly</option>
-                  <option value="QUARTERLY">Quarterly</option>
-                  <option value="HALF_YEARLY">Half-Yearly</option>
-                  <option value="YEARLY">Yearly</option>
-                  <option value="ONE_TIME">One-Time</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
               <Input
-                label="Pause Cycles"
+                label="Minimum Order Quantity *"
                 type="number"
-                value={editPauseCycles}
-                onChange={(e: any) => setEditPauseCycles(e.target.value)}
-              />
-              <Input
-                label="Notice (Days)"
-                type="number"
-                value={editNoticeDays}
-                onChange={(e: any) => setEditNoticeDays(e.target.value)}
-              />
-              <Input
-                label="Trial (Days)"
-                type="number"
-                value={editTrialDays}
-                onChange={(e: any) => setEditTrialDays(e.target.value)}
+                min="1"
+                step="1"
+                value={editMinQty}
+                onChange={(e: any) => setEditMinQty(e.target.value)}
+                required
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-caps mb-1.5">
-                Features & Terms (1 per line)
+                Billing Cadence
               </label>
-              <textarea
-                rows={3}
-                value={editFeatures}
-                onChange={(e: any) => setEditFeatures(e.target.value)}
-                className="w-full p-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
-              />
+              <select
+                value={editFreq}
+                onChange={(e: any) => setEditFreq(e.target.value as BillingFrequency)}
+                className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
+              >
+                <option value="DAILY">Daily</option>
+                <option value="WEEKLY">Weekly</option>
+                <option value="MONTHLY">Monthly</option>
+                <option value="YEARLY">Yearly</option>
+                <option value="QUARTERLY">Quarterly</option>
+                <option value="HALF_YEARLY">Half-Yearly</option>
+                <option value="ONE_TIME">One-Time</option>
+              </select>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-caps mb-1.5">
+                  Availability Start Date
+                </label>
+                <input
+                  type="date"
+                  value={editStartDate}
+                  onChange={(e) => setEditStartDate(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-caps mb-1.5">
+                  Availability End Date
+                </label>
+                <input
+                  type="date"
+                  value={editEndDate}
+                  min={editStartDate || undefined}
+                  onChange={(e) => setEditEndDate(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Lifecycle Rules */}
+            <div className="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-on-surface block">
+                Independent Lifecycle Rules
+              </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editAutoClose}
+                    onChange={(e) => setEditAutoClose(e.target.checked)}
+                    className="mt-0.5 rounded border-outline-variant text-primary focus:ring-0"
+                  />
+                  <div>
+                    <strong className="text-on-surface block">Auto-Close on End</strong>
+                    <span className="text-on-surface-variant text-[11px]">
+                      Terminate subscription upon window expiry.
+                    </span>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editEarlyClose}
+                    onChange={(e) => setEditEarlyClose(e.target.checked)}
+                    className="mt-0.5 rounded border-outline-variant text-primary focus:ring-0"
+                  />
+                  <div>
+                    <strong className="text-on-surface block">Allow Early Closure</strong>
+                    <span className="text-on-surface-variant text-[11px]">
+                      Allow customer or staff to cancel early.
+                    </span>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editPause}
+                    onChange={(e) => setEditPause(e.target.checked)}
+                    className="mt-0.5 rounded border-outline-variant text-primary focus:ring-0"
+                  />
+                  <div>
+                    <strong className="text-on-surface block">Allow Pause</strong>
+                    <span className="text-on-surface-variant text-[11px]">
+                      Enable subscription pause.
+                    </span>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editRenew}
+                    onChange={(e) => setEditRenew(e.target.checked)}
+                    className="mt-0.5 rounded border-outline-variant text-primary focus:ring-0"
+                  />
+                  <div>
+                    <strong className="text-on-surface block">Allow Renewal</strong>
+                    <span className="text-on-surface-variant text-[11px]">
+                      Enable automatic recurring renewal.
+                    </span>
+                  </div>
+                </label>
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/20">

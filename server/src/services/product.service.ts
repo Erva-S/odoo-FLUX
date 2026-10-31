@@ -9,7 +9,39 @@ import {
 } from '../validators/product.validator.js';
 import { createAuditLog } from './audit.service.js';
 
-export async function listProducts(query: QueryProductInput) {
+export function calculateFinalPrice(basePrice: Prisma.Decimal | number, additionalPrice: Prisma.Decimal | number): number {
+  const base = typeof basePrice === 'number' ? basePrice : Number(basePrice);
+  const extra = typeof additionalPrice === 'number' ? additionalPrice : Number(additionalPrice);
+  return Math.round((base + extra) * 100) / 100;
+}
+
+export function enrichProductWithPricing(product: any, userRole?: string) {
+  if (!product) return product;
+  const baseSales = Number(product.salesPrice || 0);
+
+  const enrichedVariants = (product.variants || []).map((v: any) => {
+    const extra = Number(v.additionalPrice ?? v.price ?? 0);
+    return {
+      ...v,
+      additionalPrice: extra,
+      calculatedFinalPrice: calculateFinalPrice(baseSales, extra),
+    };
+  });
+
+  const res = {
+    ...product,
+    variants: enrichedVariants,
+  };
+
+  // Cost price security: Customer accounts must not see cost price
+  if (userRole === 'CUSTOMER') {
+    delete res.costPrice;
+  }
+
+  return res;
+}
+
+export async function listProducts(query: QueryProductInput, userRole?: string) {
   const { page, limit, search, status, category, sortBy, sortOrder } = query;
   const skip = (page - 1) * limit;
 
@@ -51,8 +83,10 @@ export async function listProducts(query: QueryProductInput) {
     prisma.product.count({ where: { status: 'INACTIVE' } }),
   ]);
 
+  const enrichedItems = items.map((p) => enrichProductWithPricing(p, userRole));
+
   return {
-    items,
+    items: enrichedItems,
     pagination: {
       total,
       page,
@@ -67,7 +101,7 @@ export async function listProducts(query: QueryProductInput) {
   };
 }
 
-export async function getProductById(id: string) {
+export async function getProductById(id: string, userRole?: string) {
   const product = await prisma.product.findUnique({
     where: { id },
     include: {
@@ -92,13 +126,13 @@ export async function getProductById(id: string) {
     throw error;
   }
 
-  return product;
+  return enrichProductWithPricing(product, userRole);
 }
 
 export async function createProduct(input: CreateProductInput, actorUserId?: string) {
   // 1. Check code uniqueness
   const existing = await prisma.product.findUnique({
-    where: { code: input.code },
+    where: { code: input.code.toUpperCase() },
   });
 
   if (existing) {
@@ -109,7 +143,7 @@ export async function createProduct(input: CreateProductInput, actorUserId?: str
 
   // 2. Validate variant codes if provided
   if (input.variants && input.variants.length > 0) {
-    const variantCodes = input.variants.map((v) => v.code);
+    const variantCodes = input.variants.map((v) => v.code.toUpperCase());
     const existingVariants = await prisma.productVariant.findMany({
       where: { code: { in: variantCodes } },
       select: { code: true },
@@ -129,20 +163,30 @@ export async function createProduct(input: CreateProductInput, actorUserId?: str
       data: {
         name: input.name,
         code: input.code.toUpperCase(),
+        type: input.type || 'Software',
+        salesPrice: new Prisma.Decimal(input.salesPrice ?? 0),
+        costPrice: new Prisma.Decimal(input.costPrice ?? 0),
+        notes: input.notes,
         description: input.description,
         category: input.category,
         status: input.status as ProductStatus,
-        variants: input.variants && input.variants.length > 0
-          ? {
-              create: input.variants.map((v) => ({
-                name: v.name,
-                code: v.code.toUpperCase(),
-                description: v.description,
-                price: new Prisma.Decimal(v.price),
-                status: v.status as ProductStatus,
-              })),
-            }
-          : undefined,
+        variants:
+          input.variants && input.variants.length > 0
+            ? {
+                create: input.variants.map((v) => {
+                  const extraPrice = new Prisma.Decimal(v.additionalPrice ?? v.price ?? 0);
+                  return {
+                    name: v.name,
+                    code: v.code.toUpperCase(),
+                    description: v.description,
+                    additionalPrice: extraPrice,
+                    price: extraPrice,
+                    attributes: v.attributes ?? undefined,
+                    status: v.status as ProductStatus,
+                  };
+                }),
+              }
+            : undefined,
       },
       include: {
         variants: true,
@@ -157,11 +201,11 @@ export async function createProduct(input: CreateProductInput, actorUserId?: str
       action: 'PRODUCT_CREATED',
       entityType: 'Product',
       entityId: product.id,
-      metadata: { code: product.code, name: product.name, category: product.category },
+      metadata: { code: product.code, name: product.name, salesPrice: input.salesPrice },
     });
   }
 
-  return product;
+  return enrichProductWithPricing(product);
 }
 
 export async function updateProduct(id: string, input: UpdateProductInput, actorUserId?: string) {
@@ -189,6 +233,10 @@ export async function updateProduct(id: string, input: UpdateProductInput, actor
     data: {
       name: input.name,
       code: input.code ? input.code.toUpperCase() : undefined,
+      type: input.type,
+      salesPrice: input.salesPrice !== undefined ? new Prisma.Decimal(input.salesPrice) : undefined,
+      costPrice: input.costPrice !== undefined ? new Prisma.Decimal(input.costPrice) : undefined,
+      notes: input.notes,
       description: input.description,
       category: input.category,
       status: input.status as ProductStatus | undefined,
@@ -285,10 +333,35 @@ export async function deleteProduct(id: string, actorUserId?: string) {
 // Product Variants Operations
 // ==========================================
 
+export async function getVariantById(id: string) {
+  const variant = await prisma.productVariant.findUnique({
+    where: { id },
+    include: {
+      product: true,
+      plans: true,
+    },
+  });
+
+  if (!variant) {
+    const error = new Error(`Variant with ID '${id}' not found`);
+    (error as any).statusCode = 404;
+    throw error;
+  }
+
+  const extra = Number(variant.additionalPrice ?? variant.price ?? 0);
+  const base = Number(variant.product?.salesPrice ?? 0);
+
+  return {
+    ...variant,
+    additionalPrice: extra,
+    calculatedFinalPrice: calculateFinalPrice(base, extra),
+  };
+}
+
 export async function listVariantsByProduct(productId: string) {
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    select: { id: true, name: true, code: true, status: true },
+    select: { id: true, name: true, code: true, salesPrice: true, status: true },
   });
 
   if (!product) {
@@ -305,7 +378,17 @@ export async function listVariantsByProduct(productId: string) {
     },
   });
 
-  return { product, variants };
+  const baseSales = Number(product.salesPrice || 0);
+  const enrichedVariants = variants.map((v) => {
+    const extra = Number(v.additionalPrice ?? v.price ?? 0);
+    return {
+      ...v,
+      additionalPrice: extra,
+      calculatedFinalPrice: calculateFinalPrice(baseSales, extra),
+    };
+  });
+
+  return { product, variants: enrichedVariants };
 }
 
 export async function createVariant(productId: string, input: CreateVariantInput, actorUserId?: string) {
@@ -326,16 +409,27 @@ export async function createVariant(productId: string, input: CreateVariantInput
     throw error;
   }
 
+  const extraPrice = new Prisma.Decimal(input.additionalPrice ?? input.price ?? 0);
+
   const variant = await prisma.productVariant.create({
     data: {
       productId,
       name: input.name,
       code: input.code.toUpperCase(),
       description: input.description,
-      price: new Prisma.Decimal(input.price),
+      additionalPrice: extraPrice,
+      price: extraPrice,
+      attributes: (input.attributes as Prisma.InputJsonValue) ?? undefined,
       status: input.status as ProductStatus,
     },
   });
+
+  const baseSales = Number(product.salesPrice || 0);
+  const enriched = {
+    ...variant,
+    additionalPrice: Number(variant.additionalPrice),
+    calculatedFinalPrice: calculateFinalPrice(baseSales, extraPrice),
+  };
 
   if (actorUserId) {
     await createAuditLog({
@@ -343,15 +437,18 @@ export async function createVariant(productId: string, input: CreateVariantInput
       action: 'VARIANT_CREATED',
       entityType: 'ProductVariant',
       entityId: variant.id,
-      metadata: { productId, code: variant.code, price: input.price },
+      metadata: { productId, code: variant.code, additionalPrice: Number(extraPrice) },
     });
   }
 
-  return variant;
+  return enriched;
 }
 
 export async function updateVariant(id: string, input: UpdateVariantInput, actorUserId?: string) {
-  const variant = await prisma.productVariant.findUnique({ where: { id } });
+  const variant = await prisma.productVariant.findUnique({
+    where: { id },
+    include: { product: true },
+  });
   if (!variant) {
     const error = new Error(`Variant with ID '${id}' not found`);
     (error as any).statusCode = 404;
@@ -369,13 +466,21 @@ export async function updateVariant(id: string, input: UpdateVariantInput, actor
     }
   }
 
+  const extraPrice = input.additionalPrice !== undefined
+    ? new Prisma.Decimal(input.additionalPrice)
+    : input.price !== undefined
+    ? new Prisma.Decimal(input.price)
+    : undefined;
+
   const updated = await prisma.productVariant.update({
     where: { id },
     data: {
       name: input.name,
       code: input.code ? input.code.toUpperCase() : undefined,
       description: input.description,
-      price: input.price !== undefined ? new Prisma.Decimal(input.price) : undefined,
+      additionalPrice: extraPrice,
+      price: extraPrice,
+      attributes: (input.attributes as Prisma.InputJsonValue) ?? undefined,
       status: input.status as ProductStatus | undefined,
     },
   });
@@ -390,7 +495,14 @@ export async function updateVariant(id: string, input: UpdateVariantInput, actor
     });
   }
 
-  return updated;
+  const baseSales = Number(variant.product?.salesPrice || 0);
+  const finalExtra = Number(updated.additionalPrice ?? updated.price ?? 0);
+
+  return {
+    ...updated,
+    additionalPrice: finalExtra,
+    calculatedFinalPrice: calculateFinalPrice(baseSales, finalExtra),
+  };
 }
 
 export async function updateVariantStatus(id: string, status: ProductStatus, actorUserId?: string) {

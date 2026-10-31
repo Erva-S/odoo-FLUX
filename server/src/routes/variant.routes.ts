@@ -7,6 +7,7 @@ const router = Router();
 
 router.use(authenticate, authorizeRoles('ADMIN', 'STAFF'));
 
+router.get('/:id', productController.getVariant);
 router.put('/:id', productController.updateVariant);
 router.patch('/:id/status', productController.updateVariantStatus);
 router.delete('/:id', authorizeRoles('ADMIN'), productController.deleteVariant);
