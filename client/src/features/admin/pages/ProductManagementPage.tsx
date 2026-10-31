@@ -1,14 +1,9 @@
-<<<<<<< HEAD
-import React, { useState, useEffect, useCallback } from 'react';
-=======
-import React, { useState } from 'react';
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   Package,
   Layers,
   TrendingUp,
   Search,
-<<<<<<< HEAD
   Plus,
   Boxes,
   CheckCircle2,
@@ -21,25 +16,11 @@ import {
   ChevronRight,
   X,
   Eye,
-=======
-  Filter,
-  Download,
-  Plus,
-  Tag,
-  Boxes,
-  CheckCircle2,
-  ChevronRight,
-  Edit2,
-  Trash2,
-  DollarSign,
-  AlertCircle,
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
 } from 'lucide-react';
 import { Badge } from '../../../components/ui/Badge.js';
 import { Button } from '../../../components/ui/Button.js';
 import { Modal } from '../../../components/ui/Modal.js';
 import { Input } from '../../../components/ui/Input.js';
-<<<<<<< HEAD
 import {
   fetchProducts,
   createProduct,
@@ -277,125 +258,6 @@ export function ProductManagementPage() {
 
   const totalVariantsCount = products.reduce((acc, p) => acc + (p.variants?.length || 0), 0);
 
-=======
-
-interface ProductItem {
-  id: string;
-  sku: string;
-  name: string;
-  category: 'Core SaaS' | 'Add-on' | 'Connector' | 'Service';
-  basePrice: string;
-  billingFrequency: 'Monthly' | 'Quarterly' | 'Annual';
-  variantsCount: number;
-  status: 'Active' | 'Draft' | 'Deprecated';
-  description: string;
-}
-
-const INITIAL_PRODUCTS: ProductItem[] = [
-  {
-    id: 'prod-1',
-    sku: 'SUB-CORE-001',
-    name: 'Subscriptly Enterprise Engine',
-    category: 'Core SaaS',
-    basePrice: '₹45,000 / mo',
-    billingFrequency: 'Monthly',
-    variantsCount: 3,
-    status: 'Active',
-    description: 'Complete recurring billing and dunning management engine with enterprise SLA.',
-  },
-  {
-    id: 'prod-2',
-    sku: 'SUB-ANL-002',
-    name: 'Real-time FinOps Telemetry',
-    category: 'Add-on',
-    basePrice: '₹12,500 / mo',
-    billingFrequency: 'Monthly',
-    variantsCount: 2,
-    status: 'Active',
-    description: 'Live cohort retention, MRR forecasts, and automated tax accounting analytics.',
-  },
-  {
-    id: 'prod-3',
-    sku: 'SUB-GST-003',
-    name: 'India GST & e-Invoice Connector',
-    category: 'Connector',
-    basePrice: '₹9,000 / mo',
-    billingFrequency: 'Annual',
-    variantsCount: 1,
-    status: 'Active',
-    description: 'Direct NIC / GSTN government portal bridge with instant IRN & QR generation.',
-  },
-  {
-    id: 'prod-4',
-    sku: 'SUB-MAND-004',
-    name: 'NPCI e-Mandate & Razorpay AutoPay',
-    category: 'Connector',
-    basePrice: '₹15,000 / mo',
-    billingFrequency: 'Monthly',
-    variantsCount: 4,
-    status: 'Active',
-    description: 'Multi-bank recurring debit engine with automatic retry cascades and dispute triage.',
-  },
-  {
-    id: 'prod-5',
-    sku: 'SUB-MIGR-005',
-    name: 'White-glove Legacy Migration',
-    category: 'Service',
-    basePrice: '₹75,000 one-off',
-    billingFrequency: 'Annual',
-    variantsCount: 1,
-    status: 'Active',
-    description: 'Dedicated database schema extraction and historical ledger import package.',
-  },
-];
-
-export function ProductManagementPage() {
-  const [products, setProducts] = useState<ProductItem[]>(INITIAL_PRODUCTS);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('All');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // New product form
-  const [newName, setNewName] = useState('');
-  const [newSku, setNewSku] = useState('');
-  const [newCategory, setNewCategory] = useState<ProductItem['category']>('Core SaaS');
-  const [newBasePrice, setNewBasePrice] = useState('');
-  const [newFreq, setNewFreq] = useState<ProductItem['billingFrequency']>('Monthly');
-  const [newDesc, setNewDesc] = useState('');
-
-  const filteredProducts = products.filter((prod) => {
-    const matchesSearch =
-      prod.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      prod.sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'All' || prod.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
-
-  const handleCreateProduct = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newName || !newSku) return;
-
-    const item: ProductItem = {
-      id: `prod-${Date.now()}`,
-      sku: newSku.toUpperCase(),
-      name: newName,
-      category: newCategory,
-      basePrice: newBasePrice || '₹10,000 / mo',
-      billingFrequency: newFreq,
-      variantsCount: 1,
-      status: 'Active',
-      description: newDesc || 'Brightloop Software catalog item.',
-    };
-
-    setProducts([item, ...products]);
-    setIsModalOpen(false);
-    setNewName('');
-    setNewSku('');
-    setNewBasePrice('');
-    setNewDesc('');
-  };
-
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
   return (
     <div className="space-y-6">
       {/* 1. Header & Catalog Overview */}
@@ -403,48 +265,28 @@ export function ProductManagementPage() {
         <div>
           <div className="flex items-center gap-2 text-outline text-xs uppercase tracking-wider font-semibold font-label-caps mb-1">
             <span>Catalog Architecture</span>
-            <span>•</span>
-<<<<<<< HEAD
+            <span>ΓÇó</span>
             <span className="text-tertiary font-bold">Phase 2 Live Production</span>
-=======
-            <span className="text-tertiary font-bold">Live Production</span>
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-on-surface font-headline-xl">
             Products & Catalog
           </h1>
           <p className="text-sm text-on-surface-variant font-body-default mt-1">
-<<<<<<< HEAD
             Configure software offerings, add-ons, pricing models, and SKU variant tiers for Brightloop Software.
           </p>
         </div>
         <div className="flex items-center gap-2">
-=======
-            Configure software licenses, add-ons, pricing models, and variant tiers for Brightloop
-            Software.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="md" leftIcon={<Download className="w-4 h-4" />}>
-            Export Matrix
-          </Button>
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
           <Button
             variant="primary"
             size="md"
             leftIcon={<Plus className="w-4 h-4" />}
-<<<<<<< HEAD
             onClick={() => setIsCreateModalOpen(true)}
-=======
-            onClick={() => setIsModalOpen(true)}
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
           >
             Create Product
           </Button>
         </div>
       </div>
 
-<<<<<<< HEAD
       {/* Notifications */}
       {error && (
         <div className="p-4 rounded-xl bg-error-container text-on-error-container flex items-center justify-between text-sm">
@@ -479,23 +321,10 @@ export function ProductManagementPage() {
             </span>
             <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-data-mono text-[11px]">
               Database
-=======
-      {/* 2. Catalog Summary KPI Bento */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Total Base Products */}
-        <div className="rounded-xl bg-surface-container-lowest p-5 border border-outline-variant/20 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="font-label-caps text-xs uppercase tracking-wider text-outline font-semibold">
-              Base Catalog Products
-            </span>
-            <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-data-mono text-[11px]">
-              SKU Root
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
             </span>
           </div>
           <div className="my-3 flex items-baseline gap-3">
             <span className="text-3xl font-bold text-on-surface font-metric-display">
-<<<<<<< HEAD
               {totalCount}
             </span>
             <span className="text-xs font-semibold text-tertiary flex items-center gap-0.5">
@@ -547,69 +376,6 @@ export function ProductManagementPage() {
           </div>
           <div className="flex items-center justify-between text-xs text-on-surface-variant pt-1 border-t border-outline-variant/10">
             <span>Relational Restrict integrity active</span>
-=======
-              {products.length}
-            </span>
-            <span className="text-xs font-semibold text-tertiary flex items-center gap-0.5">
-              <TrendingUp className="w-3.5 h-3.5" /> +2 this cycle
-            </span>
-          </div>
-          <div className="flex items-center justify-between text-xs text-on-surface-variant pt-1 border-t border-outline-variant/10">
-            <span>
-              Active SaaS: <strong className="text-on-surface">11</strong>
-            </span>
-            <span>
-              Add-ons: <strong className="text-on-surface">3</strong>
-            </span>
-          </div>
-        </div>
-
-        {/* Active Variants */}
-        <div className="rounded-xl bg-surface-container-lowest p-5 border border-outline-variant/20 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="font-label-caps text-xs uppercase tracking-wider text-outline font-semibold">
-              Active SKUs & Modifiers
-            </span>
-            <Badge variant="indigo" size="sm">
-              42 SKUs
-            </Badge>
-          </div>
-          <div className="my-3 flex items-baseline gap-3">
-            <span className="text-3xl font-bold text-on-surface font-metric-display">42</span>
-            <span className="text-xs font-semibold text-secondary flex items-center gap-0.5">
-              <Boxes className="w-3.5 h-3.5" /> 3.0 per Base
-            </span>
-          </div>
-          <div className="flex items-center justify-between text-xs text-on-surface-variant pt-1 border-t border-outline-variant/10">
-            <span>
-              Enterprise Add-ons: <strong className="text-on-surface">28</strong>
-            </span>
-            <span>
-              Connectors: <strong className="text-on-surface">14</strong>
-            </span>
-          </div>
-        </div>
-
-        {/* Catalog Recurring Volume */}
-        <div className="rounded-xl bg-surface-container-lowest p-5 border border-outline-variant/20 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="font-label-caps text-xs uppercase tracking-wider text-outline font-semibold">
-              Recurring Catalog Pipeline
-            </span>
-            <Badge variant="success" size="sm">
-              ARR Potential
-            </Badge>
-          </div>
-          <div className="my-3 flex items-baseline gap-3">
-            <span className="text-3xl font-bold text-on-surface font-metric-display">₹1.4 Cr</span>
-            <span className="text-xs font-semibold text-tertiary flex items-center gap-0.5">
-              <TrendingUp className="w-3.5 h-3.5" /> +18.4% YoY
-            </span>
-          </div>
-          <div className="flex items-center justify-between text-xs text-on-surface-variant pt-1 border-t border-outline-variant/10">
-            <span>Target Expansion MRR</span>
-            <span className="font-semibold text-on-surface font-data-mono">₹11.67 L/mo</span>
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
           </div>
         </div>
       </div>
@@ -621,18 +387,12 @@ export function ProductManagementPage() {
           <input
             type="text"
             value={searchTerm}
-<<<<<<< HEAD
             onChange={(e: any) => setSearchTerm(e.target.value)}
             placeholder="Search by product name, SKU or description..."
-=======
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Filter by product name, SKU or tag..."
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
             className="w-full h-10 pl-9 pr-4 rounded-lg bg-surface-container-low text-on-surface placeholder:text-outline text-sm border border-outline-variant/30 focus:outline-none focus:bg-surface-container-lowest"
           />
         </div>
 
-<<<<<<< HEAD
         <div className="flex flex-wrap items-center gap-2">
           {/* Category Filter */}
           <div className="flex items-center bg-surface-container-low p-1 rounded-lg gap-1">
@@ -675,23 +435,6 @@ export function ProductManagementPage() {
               </button>
             ))}
           </div>
-=======
-        <div className="flex items-center bg-surface-container-low p-1 rounded-lg gap-1">
-          {['All', 'Core SaaS', 'Add-on', 'Connector', 'Service'].map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                categoryFilter === cat
-                  ? 'bg-surface-container-lowest text-primary shadow-sm font-semibold'
-                  : 'text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
         </div>
       </div>
 
@@ -699,17 +442,9 @@ export function ProductManagementPage() {
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-outline-variant/20 flex items-center justify-between">
           <h3 className="font-headline-sm text-base font-semibold text-on-surface">
-<<<<<<< HEAD
             Catalog Products ({products.length} of {totalCount})
           </h3>
           {loading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
-=======
-            Active Catalog Entities ({filteredProducts.length})
-          </h3>
-          <span className="text-xs text-on-surface-variant">
-            Displaying configured SKUs with active pricing rules
-          </span>
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
         </div>
 
         <div className="overflow-x-auto">
@@ -718,24 +453,14 @@ export function ProductManagementPage() {
               <tr className="bg-surface-container-low text-on-surface-variant text-[11px] uppercase tracking-wider font-semibold select-none border-b border-outline-variant/20">
                 <th className="py-3 px-4">Product & SKU</th>
                 <th className="py-3 px-3">Category</th>
-<<<<<<< HEAD
                 <th className="py-3 px-3">Variants</th>
                 <th className="py-3 px-3">Plans</th>
-=======
-                <th className="py-3 px-3">Base Price</th>
-                <th className="py-3 px-3">Cadence</th>
-                <th className="py-3 px-3 text-center">Variants</th>
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
                 <th className="py-3 px-3 text-center">Status</th>
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/10 text-sm">
-<<<<<<< HEAD
               {products.map((prod) => (
-=======
-              {filteredProducts.map((prod) => (
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
                 <tr key={prod.id} className="hover:bg-surface-container-low/50 transition-colors">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
@@ -744,11 +469,7 @@ export function ProductManagementPage() {
                       </div>
                       <div>
                         <div className="font-semibold text-on-surface">{prod.name}</div>
-<<<<<<< HEAD
                         <div className="text-[11px] font-data-mono text-outline">{prod.code}</div>
-=======
-                        <div className="text-[11px] font-data-mono text-outline">{prod.sku}</div>
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
                       </div>
                     </div>
                   </td>
@@ -757,7 +478,6 @@ export function ProductManagementPage() {
                       {prod.category}
                     </span>
                   </td>
-<<<<<<< HEAD
                   <td className="py-3 px-3">
                     <span className="inline-flex px-2 py-0.5 rounded-full bg-surface-container-high text-xs font-data-mono font-medium">
                       {prod.variants?.length || 0} SKUs
@@ -768,26 +488,10 @@ export function ProductManagementPage() {
                   </td>
                   <td className="py-3 px-3 text-center">
                     <Badge variant={prod.status === 'ACTIVE' ? 'success' : 'neutral'} size="sm">
-=======
-                  <td className="py-3 px-3 font-semibold text-on-surface font-data-mono text-xs">
-                    {prod.basePrice}
-                  </td>
-                  <td className="py-3 px-3 text-xs text-on-surface-variant">
-                    {prod.billingFrequency}
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    <span className="inline-flex px-2 py-0.5 rounded-full bg-surface-container-high text-xs font-data-mono font-medium">
-                      {prod.variantsCount} SKUs
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    <Badge variant="success" size="sm">
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
                       {prod.status}
                     </Badge>
                   </td>
                   <td className="py-3 px-4 text-right">
-<<<<<<< HEAD
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         variant="ghost"
@@ -824,20 +528,11 @@ export function ProductManagementPage() {
                         onClick={() => handleDeleteProduct(prod)}
                       >
                         <Trash2 className="w-3.5 h-3.5 text-error hover:text-error/80" />
-=======
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Boxes className="w-3.5 h-3.5" />
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
                       </Button>
                     </div>
                   </td>
                 </tr>
               ))}
-<<<<<<< HEAD
               {!loading && products.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-on-surface-variant text-sm">
@@ -883,7 +578,7 @@ export function ProductManagementPage() {
           isOpen={true}
           onClose={() => setInspectingProduct(null)}
           title={`Product: ${inspectingProduct.name}`}
-          description={`SKU Code: ${inspectingProduct.code} • Category: ${inspectingProduct.category}`}
+          description={`SKU Code: ${inspectingProduct.code} ΓÇó Category: ${inspectingProduct.category}`}
           maxWidth="2xl"
         >
           <div className="space-y-5">
@@ -979,50 +674,23 @@ export function ProductManagementPage() {
         onClose={() => setIsCreateModalOpen(false)}
         title="Add Catalog Product"
         description="Register a software tier, add-on capability, or integration bridge."
-=======
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* 5. Create Product Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Add Catalog Product"
-        description="Define a core software tier, add-on capability, or integration bridge."
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
         maxWidth="lg"
       >
         <form onSubmit={handleCreateProduct} className="space-y-4">
           <Input
-<<<<<<< HEAD
             label="Product Name *"
             placeholder="e.g. Enterprise Cloud Storage"
             value={name}
             onChange={(e: any) => setName(e.target.value)}
-=======
-            label="Product Name"
-            placeholder="e.g. Subscriptly Custom Domain Gateway"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
             required
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-<<<<<<< HEAD
               label="Product SKU / Code *"
               placeholder="e.g. CLD-STR-01"
               value={code}
               onChange={(e: any) => setCode(e.target.value)}
-=======
-              label="Root SKU Code"
-              placeholder="e.g. SUB-DOM-006"
-              value={newSku}
-              onChange={(e) => setNewSku(e.target.value)}
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
               required
             />
             <div>
@@ -1030,13 +698,8 @@ export function ProductManagementPage() {
                 Category
               </label>
               <select
-<<<<<<< HEAD
                 value={category}
                 onChange={(e: any) => setCategory(e.target.value)}
-=======
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value as any)}
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
                 className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
               >
                 <option value="Core SaaS">Core SaaS</option>
@@ -1047,53 +710,19 @@ export function ProductManagementPage() {
             </div>
           </div>
 
-<<<<<<< HEAD
-=======
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Base Price (INR)"
-              placeholder="e.g. ₹20,000 / mo"
-              value={newBasePrice}
-              onChange={(e) => setNewBasePrice(e.target.value)}
-            />
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-caps mb-1.5">
-                Billing Cadence
-              </label>
-              <select
-                value={newFreq}
-                onChange={(e) => setNewFreq(e.target.value as any)}
-                className="w-full h-10 px-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
-              >
-                <option value="Monthly">Monthly</option>
-                <option value="Quarterly">Quarterly</option>
-                <option value="Annual">Annual</option>
-              </select>
-            </div>
-          </div>
-
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-label-caps mb-1.5">
               Description
             </label>
             <textarea
-<<<<<<< HEAD
               rows={2}
               value={description}
               onChange={(e: any) => setDescription(e.target.value)}
               placeholder="Specifications and architectural scope..."
-=======
-              rows={3}
-              value={newDesc}
-              onChange={(e) => setNewDesc(e.target.value)}
-              placeholder="Detailed billing specifications and tier inclusions..."
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
               className="w-full p-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface text-sm focus:outline-none"
             />
           </div>
 
-<<<<<<< HEAD
           {/* Optional First Variant */}
           <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/20 space-y-3">
             <span className="text-xs font-bold text-on-surface uppercase tracking-wider block">
@@ -1127,19 +756,11 @@ export function ProductManagementPage() {
               Cancel
             </Button>
             <Button variant="primary" size="md" type="submit" isLoading={submitting}>
-=======
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/20">
-            <Button variant="outline" size="md" type="button" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" size="md" type="submit">
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
               Save Product
             </Button>
           </div>
         </form>
       </Modal>
-<<<<<<< HEAD
 
       {/* 7. Edit Product Modal */}
       {editingProduct && (
@@ -1249,9 +870,3 @@ export function ProductManagementPage() {
     </div>
   );
 }
-=======
-    </div>
-  );
-}
-
->>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
