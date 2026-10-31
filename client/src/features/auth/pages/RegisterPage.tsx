@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext.js';
+import { supabase, isSupabaseConfigured } from '../../../lib/supabase.js';
 import { extractErrorMessage } from '../../../services/api.js';
 import { Logo } from '../../../components/common/Logo.js';
-import { User, Mail, Lock, Eye, EyeOff, Check, X, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { User, Building2, Mail, Lock, Eye, EyeOff, Check, X, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 
 export function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
+  const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,8 +19,8 @@ export function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Real-time password requirement checks
-  const hasMinLength = password.length > 8;
+  // Real-time password requirement checks (min 9 chars, uppercase, lowercase, special char)
+  const hasMinLength = password.length > 8; // More than 8 characters (min 9)
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
   const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(password);
@@ -41,12 +43,36 @@ export function RegisterPage() {
     setLoading(true);
 
     try {
+      // 1. If Supabase is configured, register user in Supabase Auth
+      if (isSupabaseConfigured()) {
+        try {
+          const { error: supaErr } = await supabase.auth.signUp({
+            email: email.trim().toLowerCase(),
+            password,
+            options: {
+              data: {
+                name: name.trim(),
+                business_name: businessName.trim() || undefined,
+              },
+            },
+          });
+          if (supaErr && !supaErr.message.includes('User already registered')) {
+            console.warn('Supabase Auth signUp note:', supaErr.message);
+          }
+        } catch (supaErr) {
+          console.warn('Supabase Auth signUp exception:', supaErr);
+        }
+      }
+
+      // 2. Register in application PostgreSQL database via backend API
       await register({
         name,
+        businessName: businessName.trim() || undefined,
         email,
         password,
         confirmPassword,
       });
+
       navigate('/portal');
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -93,6 +119,23 @@ export function RegisterPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Rahul Verma"
+              className="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-lowest border border-outline-variant/60 text-on-surface text-sm placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-on-surface font-medium" htmlFor="businessName">
+            Business Name
+          </label>
+          <div className="relative">
+            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-4 h-4" />
+            <input
+              id="businessName"
+              type="text"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              placeholder="e.g. Acme Studio"
               className="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-lowest border border-outline-variant/60 text-on-surface text-sm placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             />
           </div>
@@ -155,17 +198,20 @@ export function RegisterPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••••••"
-              className="w-full h-10 pl-9 pr-10 rounded-lg bg-surface-container-lowest border border-outline-variant/60 text-on-surface text-sm placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+              className="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container-lowest border border-outline-variant/60 text-on-surface text-sm placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             />
           </div>
         </div>
 
-        {/* Real-time Validation Requirements Grid */}
+        {/* Real-time Requirement Checklist */}
         <div className="p-3 bg-surface-container-low rounded-lg border border-outline-variant/30 space-y-1.5 text-[11px]">
+          <span className="text-[10px] uppercase font-bold text-outline tracking-wider block mb-1">
+            Password Criteria:
+          </span>
           <div className="flex items-center gap-1.5">
             {hasMinLength ? <Check className="w-3.5 h-3.5 text-secondary" /> : <X className="w-3.5 h-3.5 text-outline" />}
             <span className={hasMinLength ? 'text-secondary font-medium' : 'text-on-surface-variant'}>
-              More than 8 characters long
+              More than 8 characters (minimum 9)
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -199,35 +245,30 @@ export function RegisterPage() {
         <button
           type="submit"
           disabled={!isFormValid || loading}
-          className="mt-2 w-full h-10 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-10 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50 mt-1"
         >
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Creating account...</span>
+              <span>Creating your account...</span>
             </>
           ) : (
             <>
-              <span>Register Account</span>
+              <span>Create Customer Account</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}
         </button>
+
+        <div className="text-center pt-2">
+          <p className="text-xs text-on-surface-variant">
+            Already have an active account?{' '}
+            <Link to="/login" className="text-primary hover:underline font-semibold">
+              Sign in
+            </Link>
+          </p>
+        </div>
       </form>
-
-      <div className="relative my-6 flex items-center justify-center">
-        <div className="w-full h-px bg-outline-variant/40" />
-        <span className="absolute px-3 bg-surface-container-lowest text-[11px] text-outline uppercase tracking-wider font-semibold">
-          Already registered?
-        </span>
-      </div>
-
-      <div className="text-center text-xs text-on-surface-variant">
-        <span>Already have an account? </span>
-        <Link to="/login" className="text-primary hover:underline font-semibold">
-          Sign in here
-        </Link>
-      </div>
     </div>
   );
 }

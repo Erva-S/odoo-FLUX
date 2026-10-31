@@ -43,7 +43,6 @@ export async function stopPostgres(targetPort = 5433) {
 export async function ensurePostgresRunning(targetPort = 5433) {
   const isOpen = await isPortOpen(targetPort, '127.0.0.1');
   if (isOpen) {
-    console.log(`\x1b[32m[db]\x1b[0m PostgreSQL is active and accepting connections on port ${targetPort}`);
     return null;
   }
 

@@ -10,6 +10,7 @@ const passwordSchema = z
 export const registerSchema = z
   .object({
     name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name cannot exceed 100 characters').trim(),
+    businessName: z.string().max(100, 'Business name cannot exceed 100 characters').trim().optional().or(z.literal('')),
     email: z.string().email('Please enter a valid email address').toLowerCase().trim(),
     password: passwordSchema,
     confirmPassword: z.string(),
@@ -40,7 +41,19 @@ export const resetPasswordSchema = z
     path: ['confirmPassword'],
   });
 
+export const syncPasswordSchema = z
+  .object({
+    email: z.string().email('Please enter a valid email address').toLowerCase().trim(),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type SyncPasswordInput = z.infer<typeof syncPasswordSchema>;

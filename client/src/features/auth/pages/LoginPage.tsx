@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext.js';
+import { supabase, isSupabaseConfigured } from '../../../lib/supabase.js';
 import { extractErrorMessage } from '../../../services/api.js';
 import { Logo } from '../../../components/common/Logo.js';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
 
 type DemoRole = 'admin' | 'staff' | 'customer';
 
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const successMessage = (location.state as { message?: string } | null)?.message;
 
   const [activeRole, setActiveRole] = useState<DemoRole>('admin');
   const [email, setEmail] = useState('admin@brightloop.io');
@@ -40,7 +43,29 @@ export function LoginPage() {
     setLoading(true);
 
     try {
+      // 1. Authenticate with Subscriptly backend (verifies credentials against PostgreSQL & sets auth cookie)
       const user = await login({ email, password, rememberMe });
+
+      // 2. Sync / establish Supabase Auth session if configured
+      if (isSupabaseConfigured()) {
+        try {
+          const { error: supaErr } = await supabase.auth.signInWithPassword({
+            email: email.trim().toLowerCase(),
+            password,
+          });
+          if (supaErr && supaErr.message.includes('Invalid login credentials')) {
+            // If user exists in local PostgreSQL but not in Supabase Auth yet, seed them
+            await supabase.auth.signUp({
+              email: email.trim().toLowerCase(),
+              password,
+              options: { data: { name: user.name } },
+            });
+          }
+        } catch (supaErr) {
+          console.warn('Supabase Auth login sync note:', supaErr);
+        }
+      }
+
       if (user.role === 'ADMIN') {
         navigate('/admin');
       } else if (user.role === 'STAFF') {
@@ -125,6 +150,14 @@ export function LoginPage() {
         </div>
       </div>
 
+      {/* Success Notification Alert (e.g. from password reset) */}
+      {successMessage && (
+        <div className="mb-4 p-3 rounded-lg bg-secondary-container/70 border border-secondary/40 text-secondary flex items-center gap-2 text-xs">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+          <span>{successMessage}</span>
+        </div>
+      )}
+
       {/* Error Alert */}
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-error-container/60 border border-error/30 text-error flex items-center gap-2 text-xs">
@@ -202,37 +235,30 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 w-full h-10 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.99] disabled:opacity-70"
+          className="w-full h-10 rounded-lg bg-primary hover:bg-primary-container text-on-primary text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50 mt-2"
         >
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Authenticating...</span>
+              <span>Verifying credentials...</span>
             </>
           ) : (
             <>
-              <span>Sign in to Workspace</span>
+              <span>Sign In</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}
         </button>
+
+        <div className="text-center pt-2">
+          <p className="text-xs text-on-surface-variant">
+            Need client self-service access?{' '}
+            <Link to="/register" className="text-primary hover:underline font-semibold">
+              Register company portal
+            </Link>
+          </p>
+        </div>
       </form>
-
-      {/* Divider */}
-      <div className="relative my-6 flex items-center justify-center">
-        <div className="w-full h-px bg-outline-variant/40" />
-        <span className="absolute px-3 bg-surface-container-lowest text-[11px] text-outline uppercase tracking-wider font-semibold">
-          Customer Portal
-        </span>
-      </div>
-
-      {/* Link to Register */}
-      <div className="text-center text-xs text-on-surface-variant">
-        <span>Need a self-serve subscription account? </span>
-        <Link to="/register" className="text-primary hover:underline font-semibold">
-          Register here
-        </Link>
-      </div>
     </div>
   );
 }
