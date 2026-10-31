@@ -63,17 +63,17 @@ export function DashboardLayout() {
             <NavLink to="/admin/customers" className={navLinkClasses}>
               <Users className="w-4 h-4" />
               <span>Customers</span>
-              <span className="ml-auto text-[10px] uppercase font-bold text-outline bg-surface-container px-1.5 py-0.5 rounded">P2</span>
+              <span className="ml-auto text-[10px] uppercase font-bold text-tertiary bg-tertiary-fixed/40 px-1.5 py-0.5 rounded">360°</span>
             </NavLink>
             <NavLink to="/admin/products" className={navLinkClasses}>
               <Package className="w-4 h-4" />
               <span>Products</span>
-              <span className="ml-auto text-[10px] uppercase font-bold text-outline bg-surface-container px-1.5 py-0.5 rounded">P2</span>
+              <span className="ml-auto text-[10px] uppercase font-bold text-secondary bg-secondary-fixed/40 px-1.5 py-0.5 rounded">Catalog</span>
             </NavLink>
             <NavLink to="/admin/plans" className={navLinkClasses}>
               <Layers className="w-4 h-4" />
               <span>Plans</span>
-              <span className="ml-auto text-[10px] uppercase font-bold text-outline bg-surface-container px-1.5 py-0.5 rounded">P2</span>
+              <span className="ml-auto text-[10px] uppercase font-bold text-primary bg-primary-fixed/40 px-1.5 py-0.5 rounded">Engine</span>
             </NavLink>
             <NavLink to="/admin/quotations" className={navLinkClasses}>
               <FileText className="w-4 h-4" />
@@ -154,10 +154,16 @@ export function DashboardLayout() {
               <LayoutDashboard className="w-4 h-4" />
               <span>Dashboard</span>
             </NavLink>
+            <NavLink to="/staff/queue" className={navLinkClasses}>
+              <RotateCw className="w-4 h-4 text-secondary" />
+              <span>Queue & Triage</span>
+              <span className="ml-auto text-[10px] uppercase font-bold text-secondary bg-secondary-fixed/40 px-1.5 py-0.5 rounded">Live</span>
+            </NavLink>
             <NavLink to="/staff/customers" className={navLinkClasses}>
               <Users className="w-4 h-4" />
               <span>Customers</span>
               <span className="ml-auto text-[10px] uppercase font-bold text-tertiary bg-tertiary-fixed/40 px-1.5 py-0.5 rounded">360°</span>
+<<<<<<< HEAD
             </NavLink>
             <NavLink to="/staff/products" className={navLinkClasses}>
               <Package className="w-4 h-4" />
@@ -168,6 +174,8 @@ export function DashboardLayout() {
               <Layers className="w-4 h-4" />
               <span>Plans</span>
               <span className="ml-auto text-[10px] uppercase font-bold text-primary bg-primary-fixed/40 px-1.5 py-0.5 rounded">Engine</span>
+=======
+>>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
             </NavLink>
             <NavLink to="/staff/quotations" className={navLinkClasses}>
               <FileText className="w-4 h-4" />
@@ -203,26 +211,26 @@ export function DashboardLayout() {
           </span>
         </div>
         <nav className="space-y-1">
-          <NavLink to="/portal" end className={navLinkClasses}>
+          <NavLink to="/customer" end className={navLinkClasses}>
             <LayoutDashboard className="w-4 h-4" />
             <span>Overview</span>
           </NavLink>
-          <NavLink to="/portal/subscriptions" className={navLinkClasses}>
+          <NavLink to="/customer/subscriptions" className={navLinkClasses}>
             <RotateCw className="w-4 h-4" />
             <span>My Subscriptions</span>
             <span className="ml-auto text-[10px] uppercase font-bold text-outline bg-surface-container px-1.5 py-0.5 rounded">P2</span>
           </NavLink>
-          <NavLink to="/portal/invoices" className={navLinkClasses}>
+          <NavLink to="/customer/invoices" className={navLinkClasses}>
             <Receipt className="w-4 h-4" />
             <span>My Invoices</span>
             <span className="ml-auto text-[10px] uppercase font-bold text-outline bg-surface-container px-1.5 py-0.5 rounded">P2</span>
           </NavLink>
-          <NavLink to="/portal/payments" className={navLinkClasses}>
+          <NavLink to="/customer/payments" className={navLinkClasses}>
             <CreditCard className="w-4 h-4" />
             <span>Payment History</span>
             <span className="ml-auto text-[10px] uppercase font-bold text-outline bg-surface-container px-1.5 py-0.5 rounded">P2</span>
           </NavLink>
-          <NavLink to="/portal/profile" className={navLinkClasses}>
+          <NavLink to="/customer/profile" className={navLinkClasses}>
             <UserCircle className="w-4 h-4 text-primary" />
             <span className="font-medium">My Profile</span>
           </NavLink>
@@ -402,7 +410,7 @@ export function DashboardLayout() {
                   </div>
                   {role === 'CUSTOMER' && (
                     <button
-                      onClick={() => navigate('/portal/profile')}
+                      onClick={() => navigate('/customer/profile')}
                       className="w-full text-left px-3 py-2 text-xs text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2"
                     >
                       <UserCircle className="w-3.5 h-3.5 text-outline" />

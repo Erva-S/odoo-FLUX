@@ -13,7 +13,11 @@ import { RegisterPage } from '../features/auth/pages/RegisterPage.js';
 import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage.js';
 import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage.js';
 
+<<<<<<< HEAD
 // Feature Pages - Admin & Staff Shared Operations
+=======
+// Feature Pages - Admin
+>>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
 import { AdminDashboardPage } from '../features/admin/pages/AdminDashboardPage.js';
 import { StaffManagementPage } from '../features/admin/pages/StaffManagementPage.js';
 import { CustomerManagementPage } from '../features/admin/pages/CustomerManagementPage.js';
@@ -218,8 +222,11 @@ export function AppRoutes() {
         <Route index element={<StaffDashboardPage />} />
         <Route path="queue" element={<OperationalQueuePage />} />
         <Route path="customers" element={<CustomerManagementPage />} />
+<<<<<<< HEAD
         <Route path="products" element={<ProductManagementPage />} />
         <Route path="plans" element={<PlanConfigurationPage />} />
+=======
+>>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
         <Route
           path="quotations"
           element={
@@ -258,7 +265,11 @@ export function AppRoutes() {
         />
       </Route>
 
+<<<<<<< HEAD
       {/* Customer Feature Routes */}
+=======
+      {/* Customer Feature Routes (/customer/* and /portal/* support) */}
+>>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
       <Route
         path="/customer"
         element={

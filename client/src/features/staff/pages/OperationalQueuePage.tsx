@@ -1,8 +1,20 @@
 import React, { useState } from 'react';
 import {
+<<<<<<< HEAD
   Clock,
   AlertTriangle,
   CheckCircle2,
+=======
+  ListFilter,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  FileText,
+  User,
+  ArrowRight,
+  ShieldAlert,
+  Search,
+>>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
 } from 'lucide-react';
 import { Badge } from '../../../components/ui/Badge.js';
 import { Button } from '../../../components/ui/Button.js';
@@ -49,6 +61,18 @@ const INITIAL_TASKS: OperationalTask[] = [
     due: 'In 2 hours',
     status: 'Pending',
   },
+<<<<<<< HEAD
+=======
+  {
+    id: 'TASK-104',
+    type: 'Dispute',
+    title: 'Review AutoPay e-Mandate Decline Code 114',
+    account: 'BlueHorizon Retail Analytics',
+    priority: 'Low',
+    due: 'Nov 02',
+    status: 'Pending',
+  },
+>>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
 ];
 
 export function OperationalQueuePage() {
@@ -68,6 +92,7 @@ export function OperationalQueuePage() {
 
   return (
     <div className="space-y-6">
+<<<<<<< HEAD
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-on-surface font-headline-xl">
           Operational Queue & Triage
@@ -77,6 +102,27 @@ export function OperationalQueuePage() {
         </p>
       </div>
 
+=======
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed text-xs font-semibold font-label-caps uppercase tracking-wider">
+              Staff Operations
+            </span>
+            <span className="text-outline text-xs">•</span>
+            <span className="font-data-mono text-xs text-outline">Task Queue</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-on-surface font-headline-xl">
+            Operational Queue & Triage
+          </h1>
+          <p className="text-sm text-on-surface-variant font-body-default mt-1">
+            Execute manual billing reconciliations, client verification checks, and high-priority dunning interventions.
+          </p>
+        </div>
+      </div>
+
+      {/* Filter strip */}
+>>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
       <div className="flex items-center bg-surface-container-low p-1 rounded-lg gap-1 w-fit">
         {['All', 'Pending', 'Invoicing', 'Verification', 'Dunning', 'Completed'].map((cat) => (
           <button
@@ -94,12 +140,17 @@ export function OperationalQueuePage() {
         ))}
       </div>
 
+<<<<<<< HEAD
+=======
+      {/* Tasks List */}
+>>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
       <div className="grid grid-cols-1 gap-3">
         {filteredTasks.map((task) => (
           <Card key={task.id} className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
               <div
                 className={`p-2.5 rounded-xl shrink-0 ${
+<<<<<<< HEAD
                   task.priority === 'High' ? 'bg-error-container text-error' : 'bg-surface-container-high text-primary'
                 }`}
               >
@@ -111,6 +162,32 @@ export function OperationalQueuePage() {
                   <Badge variant={task.type === 'Dunning' ? 'warning' : 'primary'} size="sm">
                     {task.type}
                   </Badge>
+=======
+                  task.priority === 'High'
+                    ? 'bg-error-container text-error'
+                    : 'bg-surface-container-high text-primary'
+                }`}
+              >
+                {task.priority === 'High' ? (
+                  <AlertTriangle className="w-5 h-5" />
+                ) : (
+                  <Clock className="w-5 h-5" />
+                )}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-data-mono text-outline font-semibold">
+                    {task.id}
+                  </span>
+                  <Badge variant={task.type === 'Dunning' ? 'warning' : 'primary'} size="sm">
+                    {task.type}
+                  </Badge>
+                  {task.priority === 'High' && (
+                    <Badge variant="error" size="sm">
+                      Urgent
+                    </Badge>
+                  )}
+>>>>>>> d14c8310e9a7d2d87af95cb3abce6d8f6047e9c6
                 </div>
                 <h3 className="text-base font-bold text-on-surface mt-1">{task.title}</h3>
                 <div className="flex items-center gap-3 text-xs text-on-surface-variant mt-1">
