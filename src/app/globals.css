@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/CabinetGrotesk-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/CabinetGrotesk-Extrabold.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/CabinetGrotesk-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --color-primary-yellow: #ffe17c;
+  --color-charcoal: #171e19;
+  --color-sage: #b7c6c2;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-canvas: #f4f4f5;
+  --color-surface-dark: #272727;
+  --color-border-divider: #e4e4e7;
+  --status-green: #28c840;
+  --status-amber: #febc2e;
+  --status-red: #ff5f57;
+}
+
+body {
+  font-family: 'Satoshi', system-ui, sans-serif;
+  font-weight: 500;
+  background-color: var(--color-canvas);
+  color: #000000;
+  margin: 0;
+  padding: 0;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cabinet Grotesk', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 32px x 32px radial dot pattern at 10% opacity, ONLY on yellow hero or banner areas */
+.bg-neo-dots {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.12) 2px, transparent 2px);
+  background-size: 32px 32px;
+}
+
+/* Push button physics */
+.btn-push {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Satoshi', system-ui, sans-serif;
+  font-weight: 700;
+  border: 2px solid #000000;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 4px 4px 0 0 #000000;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-push:hover {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 #000000;
+}
+
+.btn-push:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 #000000;
+}
+
+.btn-push-hero {
+  box-shadow: 8px 8px 0 0 #000000;
+}
+
+.btn-push-hero:hover, .btn-push-hero:active {
+  transform: translate(4px, 4px);
+  box-shadow: 4px 4px 0 0 #000000;
+}
+
+/* Input focus styles */
+.input-neo {
+  background-color: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 8px;
+  transition: box-shadow 0.15s ease, outline 0.15s ease;
+}
+
+.input-neo:focus {
+  outline: 3px solid #000000;
+  outline-offset: 2px;
+  box-shadow: 4px 4px 0 0 #000000;
+}
+
+.input-neo-error {
+  border-color: #ff5f57 !important;
+}
+
+/* Text outline effect for hero keyword */
+.text-stroke-black {
+  -webkit-text-stroke: 2px #000000;
+  color: transparent;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+    transform: none !important;
+  }
+  .btn-push:hover, .btn-push:active, .btn-push-hero:hover, .btn-push-hero:active {
+    transform: none !important;
+    box-shadow: 4px 4px 0 0 #000000 !important;
+  }
+}
+
